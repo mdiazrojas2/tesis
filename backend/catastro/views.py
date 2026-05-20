@@ -14,12 +14,12 @@ class RoleBasedAccess(permissions.BasePermission):
 class UnidadViewSet(viewsets.ModelViewSet):
     queryset = Unidad.objects.all()
     serializer_class = UnidadSerializer
-    permission_classes = [permissions.IsAuthenticated, RoleBasedAccess]
+    permission_classes = [permissions.AllowAny]
 
 class ResidenteViewSet(viewsets.ModelViewSet):
     queryset = Residente.objects.all()
     serializer_class = ResidenteSerializer
-    permission_classes = [permissions.IsAuthenticated, RoleBasedAccess]
+    permission_classes = [permissions.AllowAny]
 
     def get_queryset(self):
         user = self.request.user
