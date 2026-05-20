@@ -1,5 +1,10 @@
 from rest_framework import serializers
-from .models import Unidad, Residente
+from .models import Condominio, Unidad, Residente, Documento, Notificacion
+
+class CondominioSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Condominio
+        fields = '__all__'
 
 class ResidenteSerializer(serializers.ModelSerializer):
     class Meta:
@@ -16,4 +21,15 @@ class UnidadSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Unidad
+        fields = '__all__'
+
+class DocumentoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Documento
+        fields = '__all__'
+
+
+class NotificacionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Notificacion
         fields = '__all__'

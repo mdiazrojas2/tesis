@@ -121,6 +121,20 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
+# Configuración de Correo Electrónico (Gmail)
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+# Por defecto se dejan vacíos para que el usuario los llene con variables de entorno o directamente aquí.
+import os
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', 's.catastro.condominio@gmail.com')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', 'tptpjjycbmygejlk')
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+
 # --- CUSTOM PROJECT SETTINGS ---
 AUTH_USER_MODEL = 'catastro.Usuario'
 
@@ -133,8 +147,7 @@ REST_FRAMEWORK = {
 # CORS configuration
 CORS_ALLOW_ALL_ORIGINS = True # Change in production!
 
-# Email Backend Mock
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+# Email settings handled above
 
 # Fernet encryption key config
 FERNET_KEYS = [SECRET_KEY]
