@@ -38,7 +38,10 @@ class ResidenteViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         user = self.request.user
         if getattr(user, 'rol', None) == 'RESIDENTE':
-            # Solo retorna por correo, asumiendo validación básica
+            # Buscar la unidad del residente logueado y devolver todos los de esa unidad
+            mi_residente = Residente.objects.filter(correo=user.email).first()
+            if mi_residente and mi_residente.unidad_id:
+                return Residente.objects.filter(unidad=mi_residente.unidad)
             return Residente.objects.filter(correo=user.email)
         return super().get_queryset()
 
@@ -89,6 +92,33 @@ class EstablecerClaveView(viewsets.ViewSet):
         user.save()
         return Response({'detail': 'Contraseña establecida correctamente.'}, status=status.HTTP_200_OK)
 
+
+class RecuperarClaveView(viewsets.ViewSet):
+    """Endpoint para solicitar recuperación de contraseña por correo."""
+    def create(self, request):
+        email = request.data.get('email', '').strip()
+        if not email:
+            return Response({'detail': 'Debe ingresar un correo electrónico.'}, status=status.HTTP_400_BAD_REQUEST)
+        User = get_user_model()
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            # Por seguridad, no revelamos si el correo existe o no
+            return Response({'detail': 'Si el correo está registrado, recibirá un enlace para restablecer su contraseña.'}, status=status.HTTP_200_OK)
+        token_generator = PasswordResetTokenGenerator()
+        token = token_generator.make_token(user)
+        uid = urlsafe_base64_encode(force_bytes(user.pk))
+        link = f"http://localhost:5173/establecer-clave/{uid}/{token}"
+        subject = "Recuperación de contraseña - CondoConnect"
+        message = (
+            f"Hola {user.get_full_name() or user.username},\n\n"
+            f"Recibimos una solicitud para restablecer tu contraseña.\n"
+            f"Haz clic en el siguiente enlace para crear una nueva contraseña:\n{link}\n\n"
+            f"Si no solicitaste esto, puedes ignorar este mensaje.\n"
+            f"El enlace expirará en 24 horas."
+        )
+        send_email_async(subject=subject, message=message, recipient_list=[email])
+        return Response({'detail': 'Si el correo está registrado, recibirá un enlace para restablecer su contraseña.'}, status=status.HTTP_200_OK)
 
 class DocumentoViewSet(viewsets.ModelViewSet):
     queryset = Documento.objects.all()

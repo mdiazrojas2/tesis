@@ -1,4 +1,4 @@
-from .views import CondominioViewSet, UnidadViewSet, ResidenteViewSet, DocumentoViewSet, NotificacionViewSet, EstablecerClaveView
+from .views import CondominioViewSet, UnidadViewSet, ResidenteViewSet, DocumentoViewSet, NotificacionViewSet, EstablecerClaveView, RecuperarClaveView
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 
@@ -12,4 +12,5 @@ router.register(r'notificaciones', NotificacionViewSet)
 urlpatterns = [
     path('', include(router.urls)),
     path('establecer-clave/', EstablecerClaveView.as_view({'post': 'create'}), name='establecer-clave'),
+    path('recuperar-clave/', RecuperarClaveView.as_view({'post': 'create'}), name='recuperar-clave'),
 ]

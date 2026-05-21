@@ -31,15 +31,36 @@ export default function MiHogar() {
         </p>
 
         {/* Progreso */}
-        <div className="mb-12">
-          <div className="flex justify-between text-sm font-medium text-slate-700 mb-2">
-            <span>Progreso</span>
-            <span>25%</span>
-          </div>
-          <div className="w-full h-2.5 bg-slate-200 rounded-full overflow-hidden flex">
-            <div className="h-full bg-slate-900 w-[25%] rounded-full"></div>
-          </div>
-        </div>
+        {(() => {
+          // Campos clave que determinan el progreso de llenado de datos
+          const camposClave = [
+            'nombre', 'apellidos', 'rut_dni', 'fecha_nacimiento', 'nacionalidad',
+            'telefono', 'correo', 'relacion_jefe_hogar',
+            'contacto_emergencia_nombre', 'contacto_emergencia_telefono'
+          ];
+          let totalCampos = 0;
+          let camposLlenos = 0;
+          integrantes.forEach(int => {
+            camposClave.forEach(campo => {
+              totalCampos++;
+              if (int[campo] !== null && int[campo] !== undefined && int[campo] !== '') {
+                camposLlenos++;
+              }
+            });
+          });
+          const porcentaje = totalCampos > 0 ? Math.round((camposLlenos / totalCampos) * 100) : 0;
+          return (
+            <div className="mb-12">
+              <div className="flex justify-between text-sm font-medium text-slate-700 mb-2">
+                <span>Progreso de datos</span>
+                <span>{porcentaje}%</span>
+              </div>
+              <div className="w-full h-2.5 bg-slate-200 rounded-full overflow-hidden flex">
+                <div className="h-full bg-slate-900 rounded-full transition-all duration-500" style={{ width: `${porcentaje}%` }}></div>
+              </div>
+            </div>
+          );
+        })()}
 
         <h2 className="text-xl font-bold text-slate-900 mb-6">Integrantes del Hogar</h2>
 

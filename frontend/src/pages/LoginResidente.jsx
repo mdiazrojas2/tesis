@@ -102,9 +102,13 @@ export default function LoginResidente() {
             </button>
             
             <div className="text-center mt-4">
-              <a href="#" className="text-sm text-slate-500 hover:text-blue-600 transition-colors">
-                ¿Olvidaste tu contraseña? <span className="text-slate-400">Recuperar Contraseña</span>
-              </a>
+              <button 
+                type="button"
+                onClick={() => navigate('/recuperar-clave')}
+                className="text-sm text-slate-500 hover:text-blue-600 transition-colors"
+              >
+                ¿Olvidaste tu contraseña? <span className="text-blue-500 font-medium">Recuperar Contraseña</span>
+              </button>
             </div>
           </form>
 
