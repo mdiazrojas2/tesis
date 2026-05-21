@@ -2,7 +2,7 @@ import React from 'react';
 import { Home, FileText, HelpCircle, Users, Bell, Settings, Building, LogOut } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 
-export default function Sidebar({ role }) {
+export default function Sidebar({ role, unitInfo }) {
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -31,7 +31,9 @@ export default function Sidebar({ role }) {
         {role === 'residente' ? (
           <div>
             <h2 className="font-semibold text-slate-800">Condominio Volcanes</h2>
-            <p className="text-xs text-slate-500 mt-1">Depto 404 - Torre B</p>
+            <p className="text-xs text-slate-500 mt-1">
+              {unitInfo ? `Depto ${unitInfo.numero_depto || ''} - Torre ${unitInfo.torre || ''}` : 'Depto 404 - Torre B'}
+            </p>
           </div>
         ) : (
           <div>

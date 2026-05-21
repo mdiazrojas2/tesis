@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import Sidebar from '../../components/Sidebar';
 import { ShieldCheck } from 'lucide-react';
+import useResidentUnit from '../../hooks/useResidentUnit';
 
 export default function ResidenteConfiguracion() {
   const [formData, setFormData] = useState({
@@ -9,6 +10,7 @@ export default function ResidenteConfiguracion() {
     confirmPassword: ''
   });
   const [isSaving, setIsSaving] = useState(false);
+  const { unitInfo } = useResidentUnit();
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -43,7 +45,7 @@ export default function ResidenteConfiguracion() {
 
   return (
     <div className="flex min-h-screen bg-white font-sans text-slate-900">
-      <Sidebar role="residente" />
+      <Sidebar role="residente" unitInfo={unitInfo} />
       
       <main className="flex-1 p-8 md:p-12 lg:px-16 overflow-y-auto">
         <h1 className="text-3xl font-bold text-slate-900 mb-8">Configuración de Cuenta</h1>

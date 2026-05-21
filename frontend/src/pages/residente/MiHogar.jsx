@@ -2,23 +2,25 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from '../../components/Sidebar';
 import { Eye } from 'lucide-react';
-import axios from 'axios';
+import api from '../../api/axiosConfig';
+import useResidentUnit from '../../hooks/useResidentUnit';
 
 export default function MiHogar() {
   const navigate = useNavigate();
   const [integrantes, setIntegrantes] = useState([]);
+  const { unitId, unitInfo, loading: unitLoading } = useResidentUnit();
 
   useEffect(() => {
-    // In a real app we would filter by the logged-in user's unit.
-    // For now we fetch all residents.
-    axios.get('http://localhost:8000/api/catastro/residentes/')
+    if (unitLoading) return;
+    // Backend filters residents by authenticated user's email
+    api.get('catastro/residentes/')
       .then(res => setIntegrantes(res.data))
-      .catch(err => console.error("Error fetching integrantes:", err));
-  }, []);
+      .catch(err => console.error('Error fetching integrantes:', err));
+  }, [unitLoading]);
 
   return (
     <div className="flex min-h-screen bg-white font-sans text-slate-900">
-      <Sidebar role="residente" />
+      <Sidebar role="residente" unitInfo={unitInfo} />
       
       <main className="flex-1 p-8 md:p-12 lg:px-16 overflow-y-auto">
         <h1 className="text-3xl font-bold text-slate-900 mb-4">Mi Hogar</h1>
@@ -66,7 +68,7 @@ export default function MiHogar() {
                     onClick={async () => {
                       if (window.confirm(`¿Está seguro de que desea eliminar a ${int.nombre}?`)) {
                         try {
-                          await axios.delete(`http://localhost:8000/api/catastro/residentes/${int.id}/`);
+                          await api.delete(`catastro/residentes/${int.id}/`);
                           setIntegrantes(prev => prev.filter(item => item.id !== int.id));
                           alert('Integrante eliminado con éxito.');
                         } catch (err) {

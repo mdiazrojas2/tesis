@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import Sidebar from '../../components/Sidebar';
 import { ChevronDown, ChevronUp, ArrowRight } from 'lucide-react';
+import useResidentUnit from '../../hooks/useResidentUnit';
 
 export default function Soporte() {
   const [openFaq, setOpenFaq] = useState(0);
   const [mensaje, setMensaje] = useState('');
+  const { unitInfo } = useResidentUnit();
 
   const faqs = [
     {
@@ -32,7 +34,7 @@ export default function Soporte() {
 
   return (
     <div className="flex min-h-screen bg-white font-sans text-slate-900">
-      <Sidebar role="residente" />
+      <Sidebar role="residente" unitInfo={unitInfo} />
       
       <main className="flex-1 p-8 md:p-12 lg:px-16 overflow-y-auto">
         <h1 className="text-3xl font-bold text-slate-900 mb-8">Soporte</h1>

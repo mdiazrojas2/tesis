@@ -1,27 +1,31 @@
 import React, { useState, useEffect } from 'react';
 import Sidebar from '../../components/Sidebar';
 import { FileText } from 'lucide-react';
-import axios from 'axios';
+import api from '../../api/axiosConfig';
+import useResidentUnit from '../../hooks/useResidentUnit';
 
 export default function MisDocumentos() {
   const [documentos, setDocumentos] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { unitId, unitInfo, loading: unitLoading } = useResidentUnit();
 
   useEffect(() => {
-    axios.get('http://localhost:8000/api/catastro/documentos/')
+    if (unitLoading) return;
+    setIsLoading(true);
+    api.get('catastro/documentos/')
       .then(res => {
         setDocumentos(res.data);
         setIsLoading(false);
       })
       .catch(err => {
-        console.error("Error cargando documentos:", err);
+        console.error('Error cargando documentos:', err);
         setIsLoading(false);
       });
-  }, []);
+  }, [unitLoading]);
 
   return (
     <div className="flex min-h-screen bg-white font-sans text-slate-900">
-      <Sidebar role="residente" />
+      <Sidebar role="residente" unitInfo={unitInfo} />
       
       <main className="flex-1 p-8 md:p-12 lg:px-16 overflow-y-auto">
         <h1 className="text-3xl font-bold text-slate-900 mb-8">Mis Documentos</h1>

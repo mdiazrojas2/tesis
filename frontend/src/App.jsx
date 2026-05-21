@@ -3,6 +3,7 @@ import { Routes, Route } from 'react-router-dom';
 
 // Pages
 import RoleSelection from './pages/RoleSelection';
+import EstablecerClave from './pages/EstablecerClave';
 import LoginResidente from './pages/LoginResidente';
 import LoginAdmin from './pages/LoginAdmin';
 import DashboardResidente from './pages/DashboardResidente';
@@ -53,6 +54,7 @@ function App() {
       <Route path="/dashboard/admin/cuentas/nueva" element={<AdminCrearCuenta />} />
       <Route path="/dashboard/admin/cuentas/editar" element={<AdminEditarCuenta />} />
       <Route path="/dashboard/admin/notificaciones" element={<AdminNotificaciones />} />
+      <Route path="/establecer-clave/:uid/:token" element={<EstablecerClave />} />
     </Routes>
   );
 }
