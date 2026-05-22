@@ -11,7 +11,7 @@ export default function AdminCrearCuenta() {
     apellidos: '',
     correo: '',
     unidad: '',
-    relacion_jefe_hogar: 'Jefe de Hogar',
+    relacion_jefe_hogar: 'JEFE_HOGAR',
     recibir_notificaciones: true
   });
 
@@ -106,8 +106,27 @@ export default function AdminCrearCuenta() {
               >
                 <option value="">Seleccione Unidad/Departamento</option>
                 {unidades.map(u => (
-                  <option key={u.id} value={u.id}>Torre {u.torre} - Depto {u.numero_depto}</option>
+                  <option key={u.id} value={u.id}>{(u.torre && u.torre !== 'null') ? `Torre ${u.torre} - Depto ${u.numero_depto}` : `Depto ${u.numero_depto}`}</option>
                 ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-900 mb-2">Tipo de Residente *</label>
+              <select 
+                name="relacion_jefe_hogar" 
+                value={formData.relacion_jefe_hogar} 
+                onChange={handleChange}
+                required
+                className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-slate-700"
+              >
+                <option value="JEFE_HOGAR">Jefe de Hogar</option>
+                <option value="CONYUGE">Cónyuge</option>
+                <option value="ARRENDATARIO">Arrendatario</option>
+                <option value="FAMILIAR_MENOR">Familiar menor de edad</option>
+                <option value="FAMILIAR_ADULTO">Familiar adulto</option>
+                <option value="FAMILIAR_ADULTO_MAYOR">Familiar adulto mayor</option>
+                <option value="OTRO">Otro</option>
               </select>
             </div>
 

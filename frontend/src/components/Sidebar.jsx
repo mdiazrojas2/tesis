@@ -32,7 +32,7 @@ export default function Sidebar({ role, unitInfo }) {
           <div>
             <h2 className="font-semibold text-slate-800">Condominio Volcanes</h2>
             <p className="text-xs text-slate-500 mt-1">
-              {unitInfo ? `Depto ${unitInfo.numero_depto || ''} - Torre ${unitInfo.torre || ''}` : 'Depto 404 - Torre B'}
+              {unitInfo ? ((unitInfo.torre && unitInfo.torre !== 'null') ? `Depto ${unitInfo.numero_depto} - Torre ${unitInfo.torre}` : `Depto ${unitInfo.numero_depto}`) : 'Depto 404 - Torre B'}
             </p>
           </div>
         ) : (

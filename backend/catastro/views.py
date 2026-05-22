@@ -30,6 +30,63 @@ class UnidadViewSet(viewsets.ModelViewSet):
     serializer_class = UnidadSerializer
     permission_classes = [permissions.IsAuthenticated]
 
+    @action(detail=False, methods=['post'], url_path='carga-masiva')
+    def carga_masiva(self, request):
+        """Carga masiva de unidades desde archivo Excel."""
+        archivo = request.FILES.get('archivo')
+        if not archivo:
+            return Response({'detail': 'Debe adjuntar un archivo Excel.'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        import openpyxl
+        try:
+            wb = openpyxl.load_workbook(archivo)
+            ws = wb.active
+        except Exception as e:
+            return Response({'detail': f'Error al leer el archivo: {str(e)}'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Leer encabezados
+        headers = [cell.value.strip().lower() if cell.value else '' for cell in ws[1]]
+        required = ['numero_depto']
+        if 'numero_depto' not in headers:
+            return Response({'detail': 'Falta la columna requerida: numero_depto'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        condominio = Condominio.objects.first()
+        if not condominio:
+            return Response({'detail': 'No hay condominio configurado.'}, status=status.HTTP_400_BAD_REQUEST)
+            
+        creados = 0
+        errores = []
+        
+        for row_idx, row in enumerate(ws.iter_rows(min_row=2, values_only=True), start=2):
+            data = dict(zip(headers, [str(v).strip() if v else '' for v in row]))
+            
+            if not data.get('numero_depto'):
+                errores.append(f'Fila {row_idx}: numero_depto es obligatorio')
+                continue
+                
+            try:
+                unidad, created = Unidad.objects.get_or_create(
+                    condominio=condominio,
+                    torre=data.get('torre', ''),
+                    numero_depto=data['numero_depto']
+                )
+                if created:
+                    creados += 1
+            except Exception as e:
+                errores.append(f'Fila {row_idx}: {str(e)}')
+                
+        return Response({
+            'detail': f'Carga completada. {creados} unidades creadas.',
+            'creados': creados,
+            'errores': errores
+        }, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['delete'], url_path='eliminar-todas')
+    def eliminar_todas(self, request):
+        """Elimina todas las unidades y sus dependencias."""
+        count, _ = Unidad.objects.all().delete()
+        return Response({'detail': f'Se han eliminado {count} unidades.'}, status=status.HTTP_200_OK)
+
 class ResidenteViewSet(viewsets.ModelViewSet):
     queryset = Residente.objects.all()
     serializer_class = ResidenteSerializer
@@ -70,6 +127,110 @@ class ResidenteViewSet(viewsets.ModelViewSet):
         message = f"Hola {residente.nombre},\n\nSe ha creado una cuenta para ti en el portal.\nHaz clic en el siguiente enlace para establecer tu contraseña y activar tu acceso:\n{link}\n\nSi no solicitaste esto, ignora el mensaje."
         send_email_async(subject=subject, message=message, recipient_list=[residente.correo])
         return Response({'detail': 'Invitación enviada correctamente.'}, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['post'], url_path='restablecer-clave')
+    def restablecer_clave(self, request, pk=None):
+        """Envía email de restablecimiento de contraseña al residente."""
+        residente = self.get_object()
+        if not residente.correo:
+            return Response({'detail': 'El residente no tiene correo registrado.'}, status=status.HTTP_400_BAD_REQUEST)
+        User = get_user_model()
+        try:
+            user = User.objects.get(email=residente.correo)
+        except User.DoesNotExist:
+            return Response({'detail': 'No hay cuenta de usuario asociada a este correo.'}, status=status.HTTP_404_NOT_FOUND)
+        token_generator = PasswordResetTokenGenerator()
+        token = token_generator.make_token(user)
+        uid = urlsafe_base64_encode(force_bytes(user.pk))
+        link = f"http://localhost:5173/establecer-clave/{uid}/{token}"
+        subject = "Restablecimiento de contraseña - CondoConnect"
+        message = f"Hola {residente.nombre},\n\nEl administrador ha solicitado restablecer tu contraseña.\nHaz clic en el siguiente enlace para crear una nueva contraseña:\n{link}\n\nSi no esperabas esto, contacta al administrador."
+        send_email_async(subject=subject, message=message, recipient_list=[residente.correo])
+        return Response({'detail': 'Correo de restablecimiento enviado correctamente.'}, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['post'], url_path='carga-masiva')
+    def carga_masiva(self, request):
+        """Carga masiva de residentes desde archivo Excel."""
+        archivo = request.FILES.get('archivo')
+        if not archivo:
+            return Response({'detail': 'Debe adjuntar un archivo Excel.'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        import openpyxl
+        try:
+            wb = openpyxl.load_workbook(archivo)
+            ws = wb.active
+        except Exception as e:
+            return Response({'detail': f'Error al leer el archivo: {str(e)}'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Leer encabezados
+        headers = [cell.value.strip().lower() if cell.value else '' for cell in ws[1]]
+        required = ['torre', 'numero_depto', 'nombre', 'correo']
+        for col in required:
+            if col not in headers:
+                return Response({'detail': f'Falta la columna requerida: {col}'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        User = get_user_model()
+        token_generator = PasswordResetTokenGenerator()
+        creados = 0
+        errores = []
+        invitaciones = 0
+        condominio = Condominio.objects.first()
+        
+        if not condominio:
+            return Response({'detail': 'No hay condominio configurado.'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        for row_idx, row in enumerate(ws.iter_rows(min_row=2, values_only=True), start=2):
+            data = dict(zip(headers, [str(v).strip() if v else '' for v in row]))
+            
+            if not data.get('nombre') or not data.get('numero_depto'):
+                errores.append(f'Fila {row_idx}: nombre y numero_depto son obligatorios')
+                continue
+            
+            try:
+                # Buscar o crear unidad
+                unidad, _ = Unidad.objects.get_or_create(
+                    condominio=condominio,
+                    torre=data.get('torre', ''),
+                    numero_depto=data['numero_depto']
+                )
+                
+                # Crear residente
+                residente = Residente.objects.create(
+                    unidad=unidad,
+                    nombre=data['nombre'],
+                    apellidos=data.get('apellidos', ''),
+                    correo=data.get('correo', '') or None,
+                    relacion_jefe_hogar=data.get('relacion_jefe_hogar', 'JEFE_HOGAR') or 'JEFE_HOGAR'
+                )
+                creados += 1
+                
+                # Crear usuario y enviar invitación si tiene correo
+                if data.get('correo'):
+                    user, created = User.objects.get_or_create(
+                        username=data['correo'],
+                        defaults={
+                            'email': data['correo'],
+                            'rol': User.Roles.RESIDENTE,
+                            'is_active': True,
+                        }
+                    )
+                    token = token_generator.make_token(user)
+                    uid = urlsafe_base64_encode(force_bytes(user.pk))
+                    link = f"http://localhost:5173/establecer-clave/{uid}/{token}"
+                    subject = "Invitación de acceso a CondoConnect"
+                    message = f"Hola {data['nombre']},\n\nSe ha creado una cuenta para ti en el portal de Condominio Volcanes.\nHaz clic en el siguiente enlace para establecer tu contraseña:\n{link}\n\nSi no solicitaste esto, ignora el mensaje."
+                    send_email_async(subject=subject, message=message, recipient_list=[data['correo']])
+                    invitaciones += 1
+                    
+            except Exception as e:
+                errores.append(f'Fila {row_idx}: {str(e)}')
+        
+        return Response({
+            'detail': f'Carga completada. {creados} residentes creados, {invitaciones} invitaciones enviadas.',
+            'creados': creados,
+            'invitaciones': invitaciones,
+            'errores': errores
+        }, status=status.HTTP_200_OK)
 
 class EstablecerClaveView(viewsets.ViewSet):
     """Endpoint que valida token y permite crear la contraseña del usuario."""

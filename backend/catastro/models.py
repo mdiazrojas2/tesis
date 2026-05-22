@@ -68,9 +68,14 @@ class Unidad(models.Model):
         return f"{self.torre if self.torre else 'Depto'} {self.numero_depto} - {self.condominio.nombre}"
 
 class Residente(models.Model):
-    class TipoResidente(models.TextChoices):
-        PROPIETARIO = 'PROPIETARIO', 'Propietario'
+    class RelacionHogar(models.TextChoices):
+        JEFE_HOGAR = 'JEFE_HOGAR', 'Jefe de Hogar'
+        CONYUGE = 'CONYUGE', 'Cónyuge'
         ARRENDATARIO = 'ARRENDATARIO', 'Arrendatario'
+        FAMILIAR_MENOR = 'FAMILIAR_MENOR', 'Familiar menor de edad'
+        FAMILIAR_ADULTO = 'FAMILIAR_ADULTO', 'Familiar adulto'
+        FAMILIAR_ADULTO_MAYOR = 'FAMILIAR_ADULTO_MAYOR', 'Familiar adulto mayor'
+        OTRO = 'OTRO', 'Otro'
 
     unidad = models.ForeignKey(Unidad, on_delete=models.CASCADE, related_name='residentes')
     nombre = models.CharField(max_length=255)
@@ -79,11 +84,15 @@ class Residente(models.Model):
     fecha_nacimiento = models.DateField(blank=True, null=True)
     nacionalidad = models.CharField(max_length=100, blank=True, null=True)
     idioma_principal = models.CharField(max_length=100, blank=True, null=True)
-    relacion_jefe_hogar = models.CharField(max_length=100, blank=True, null=True)
+    relacion_jefe_hogar = models.CharField(
+        max_length=30,
+        choices=RelacionHogar.choices,
+        default=RelacionHogar.JEFE_HOGAR,
+        blank=True, null=True
+    )
     
     telefono = models.CharField(max_length=50, blank=True, null=True)
     correo = models.EmailField(blank=True, null=True)
-    tipo = models.CharField(max_length=20, choices=TipoResidente.choices, blank=True, null=True)
     
     # Info Médica
     condicion_medica = models.BooleanField(default=False)

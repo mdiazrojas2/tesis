@@ -5,6 +5,16 @@ import { Eye } from 'lucide-react';
 import api from '../../api/axiosConfig';
 import useResidentUnit from '../../hooks/useResidentUnit';
 
+const RELACION_MAP = {
+  'JEFE_HOGAR': 'Jefe de Hogar',
+  'CONYUGE': 'Cónyuge',
+  'ARRENDATARIO': 'Arrendatario',
+  'FAMILIAR_MENOR': 'Familiar menor de edad',
+  'FAMILIAR_ADULTO': 'Familiar adulto',
+  'FAMILIAR_MAYOR': 'Familiar adulto mayor',
+  'OTRO': 'Otro'
+};
+
 export default function MiHogar() {
   const navigate = useNavigate();
   const [integrantes, setIntegrantes] = useState([]);
@@ -69,9 +79,9 @@ export default function MiHogar() {
         ) : (
           integrantes.map((int) => (
             <div key={int.id} className="border border-slate-200 rounded-xl p-6 mb-6 flex flex-col md:flex-row justify-between items-start gap-6 shadow-sm hover:shadow-md transition-shadow">
-              <div>
+              <div className="flex-1">
                 <h3 className="font-bold text-slate-900 mb-1">{int.nombre} {int.apellidos}</h3>
-                <p className="text-sm text-slate-500 mb-4">{int.relacion_jefe_hogar || 'Familiar'}</p>
+                <p className="text-sm text-slate-500 mb-4">{RELACION_MAP[int.relacion_jefe_hogar] || int.relacion_jefe_hogar || 'Familiar'}</p>
                 <button 
                   onClick={() => navigate('/dashboard/residente/hogar/detalles', { state: { integrante: int } })}
                   className="flex items-center gap-2 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-sm font-medium transition-colors"
@@ -103,9 +113,6 @@ export default function MiHogar() {
                     Eliminar
                   </button>
                 </div>
-              </div>
-              <div className="w-full md:w-64 h-40 bg-[#F4D6C3] rounded-xl overflow-hidden shrink-0 flex items-center justify-center text-slate-400">
-                <span>Sin Foto</span>
               </div>
             </div>
           ))

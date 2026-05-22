@@ -56,7 +56,12 @@ export default function FormularioIntegrante() {
         await axios.post('http://localhost:8000/api/catastro/residentes/', formData);
         alert('Integrante creado exitosamente.');
       }
-      navigate('/dashboard/residente/hogar');
+      const role = localStorage.getItem('userRole');
+      if (role === 'admin') {
+        navigate('/dashboard/admin/residentes');
+      } else {
+        navigate('/dashboard/residente/hogar');
+      }
     } catch (error) {
       console.error("Error al guardar:", error.response?.data || error);
       alert('Error al guardar. Por favor, revise los datos.');
@@ -79,7 +84,7 @@ export default function FormularioIntegrante() {
               <select name="unidad" value={formData.unidad} onChange={handleChange} required className="w-full border border-slate-200 bg-slate-50 rounded-lg px-4 py-2.5 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/50">
                 <option value="">Seleccione una unidad</option>
                 {unidades.map(u => (
-                  <option key={u.id} value={u.id}>Torre: {u.torre} - Depto: {u.numero_depto}</option>
+                  <option key={u.id} value={u.id}>{(u.torre && u.torre !== 'null') ? `Torre: ${u.torre} - Depto: ${u.numero_depto}` : `Depto: ${u.numero_depto}`}</option>
                 ))}
               </select>
             </div>
@@ -108,8 +113,17 @@ export default function FormularioIntegrante() {
               <input type="text" name="idioma_principal" value={formData.idioma_principal} onChange={handleChange} placeholder="Ingrese el idioma principal" className="w-full border border-slate-200 bg-slate-50 rounded-lg px-4 py-2.5 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/50" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Relación con el jefe de hogar</label>
-              <input type="text" name="relacion_jefe_hogar" value={formData.relacion_jefe_hogar} onChange={handleChange} placeholder="Ingrese la relación" className="w-full border border-slate-200 bg-slate-50 rounded-lg px-4 py-2.5 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/50" />
+              <label className="block text-sm font-medium text-slate-700 mb-1">Tipo de residente</label>
+              <select name="relacion_jefe_hogar" value={formData.relacion_jefe_hogar} onChange={handleChange} className="w-full border border-slate-200 bg-slate-50 rounded-lg px-4 py-2.5 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/50">
+                <option value="">Seleccione tipo</option>
+                <option value="JEFE_HOGAR">Jefe de Hogar</option>
+                <option value="CONYUGE">Cónyuge</option>
+                <option value="ARRENDATARIO">Arrendatario</option>
+                <option value="FAMILIAR_MENOR">Familiar menor de edad</option>
+                <option value="FAMILIAR_ADULTO">Familiar adulto</option>
+                <option value="FAMILIAR_ADULTO_MAYOR">Familiar adulto mayor</option>
+                <option value="OTRO">Otro</option>
+              </select>
             </div>
           </div>
 
@@ -141,8 +155,9 @@ export default function FormularioIntegrante() {
                 <input type="text" name="telefono" value={formData.telefono} onChange={handleChange} placeholder="Ingrese el teléfono" className="w-full border border-slate-200 bg-slate-50 rounded-lg px-4 py-2.5 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/50" />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Correo electrónico</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Correo electrónico (opcional)</label>
                 <input type="email" name="correo" value={formData.correo} onChange={handleChange} placeholder="Ingrese el correo electrónico" className="w-full border border-slate-200 bg-slate-50 rounded-lg px-4 py-2.5 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/50" />
+                <p className="text-xs text-slate-400 mt-1">No requerido para menores de edad o adultos mayores</p>
               </div>
             </div>
             <label className="flex items-center gap-3">
@@ -177,7 +192,14 @@ export default function FormularioIntegrante() {
           <div className="flex justify-end gap-4 pt-6 border-t border-slate-100">
             <button 
               type="button"
-              onClick={() => navigate('/dashboard/residente/hogar')}
+              onClick={() => {
+                const role = localStorage.getItem('userRole');
+                if (role === 'admin') {
+                  navigate('/dashboard/admin/residentes');
+                } else {
+                  navigate('/dashboard/residente/hogar');
+                }
+              }}
               className="px-6 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium rounded-lg transition-colors text-sm"
             >
               Cancelar

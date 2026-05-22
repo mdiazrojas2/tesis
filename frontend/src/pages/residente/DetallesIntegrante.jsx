@@ -2,6 +2,16 @@ import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import Sidebar from '../../components/Sidebar';
 
+const RELACION_MAP = {
+  'JEFE_HOGAR': 'Jefe de Hogar',
+  'CONYUGE': 'Cónyuge',
+  'ARRENDATARIO': 'Arrendatario',
+  'FAMILIAR_MENOR': 'Familiar menor de edad',
+  'FAMILIAR_ADULTO': 'Familiar adulto',
+  'FAMILIAR_MAYOR': 'Familiar adulto mayor',
+  'OTRO': 'Otro'
+};
+
 export default function DetallesIntegrante() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -64,7 +74,7 @@ export default function DetallesIntegrante() {
               </div>
               <div>
                 <p className="text-sm text-slate-500 mb-1">Relación con Jefe de Hogar</p>
-                <p className="font-medium text-slate-900">{int.relacion_jefe_hogar || 'Familiar'}</p>
+                <p className="font-medium text-slate-900">{RELACION_MAP[int.relacion_jefe_hogar] || int.relacion_jefe_hogar || 'Familiar'}</p>
               </div>
             </div>
           </section>

@@ -46,7 +46,7 @@ export default function DashboardResidente() {
                   {unitInfo ? `${unitInfo.numero_depto || '-'}` : '...'}
                 </span>
                 <span className="text-sm font-medium text-slate-500">
-                  {unitInfo ? `Torre ${unitInfo.torre || '-'}` : ''}
+                  {unitInfo ? ((unitInfo.torre && unitInfo.torre !== 'null') ? `Torre ${unitInfo.torre}` : '') : ''}
                 </span>
               </div>
             </div>

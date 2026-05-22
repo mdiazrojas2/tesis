@@ -82,8 +82,18 @@ export default function DashboardAdmin() {
   };
 
   // Compute real updated percentage
-  const updatedCount = residentes.filter(r => r.id % 2 !== 0).length;
+  const updatedCount = residentes.filter(row => {
+    const filledFields = [
+      row.nombre, row.rut_dni, row.fecha_nacimiento, row.nacionalidad,
+      row.idioma_principal, row.relacion_jefe_hogar, row.telefono, row.correo,
+      row.contacto_emergencia_nombre, row.contacto_emergencia_telefono
+    ].filter(val => val && String(val).trim() !== '').length;
+    return filledFields >= 10;
+  }).length;
   const updatedPct = residentes.length > 0 ? Math.round((updatedCount / residentes.length) * 100) : 0;
+
+  // Unidades sin residentes
+  const deptosSinResidentes = unidades.filter(u => !residentes.some(r => r.unidad === u.id));
 
   // Plan de Emergencia Dynamic Expiration
   const planDoc = documentos.find(d => 
@@ -146,12 +156,12 @@ export default function DashboardAdmin() {
 
           <div className="border border-slate-200 rounded-xl p-6 mb-6">
             <h3 className="text-sm font-medium text-slate-700 mb-6">Residentes Registrados (Vista: {activeFilter})</h3>
-            {/* Mock Chart */}
-            <div className="flex items-end justify-between h-32 gap-2 md:gap-8 px-4 transition-all duration-300">
+            <div className="flex items-end justify-between h-32 gap-2 md:gap-8 px-4 transition-all duration-300 mt-8">
               {getChartData().map(bar => (
-                <div key={bar.label} className="flex flex-col items-center flex-1">
-                  <div className="w-full bg-[#1A7FF2]/80 rounded-t-sm transition-all duration-500 ease-out" style={{ height: bar.height }}></div>
-                  <span className="text-xs text-slate-500 mt-3 font-medium">{bar.label}</span>
+                <div key={bar.label} className="flex flex-col items-center justify-end flex-1 h-full">
+                  <span className="text-xs font-bold text-[#1A7FF2] mb-1">{bar.count}</span>
+                  <div className="w-full max-w-[40px] bg-[#1A7FF2]/80 rounded-t-sm transition-all duration-500 ease-out" style={{ height: bar.height }}></div>
+                  <span className="text-[10px] md:text-xs text-slate-500 mt-2 font-medium text-center">{bar.label}</span>
                 </div>
               ))}
             </div>
@@ -171,10 +181,28 @@ export default function DashboardAdmin() {
             </div>
           </div>
 
-          {/* Card */}
-          <div className="border border-slate-200 rounded-xl p-6">
-            <p className="text-sm text-slate-600 mb-2">Documentos Cargados</p>
-            <span className="text-3xl font-bold text-slate-900">{documentos.length}</span>
+          {/* Card: Documentos y Sin Residentes */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div 
+              onClick={() => navigate('/dashboard/admin/documentos')}
+              className="border border-slate-200 rounded-xl p-6 cursor-pointer hover:border-[#1A7FF2] hover:shadow-md transition-all group"
+            >
+              <p className="text-sm text-slate-600 mb-2 group-hover:text-[#1A7FF2] transition-colors">Documentos Cargados</p>
+              <span className="text-3xl font-bold text-slate-900">{documentos.length}</span>
+            </div>
+            <div 
+              onClick={() => navigate('/dashboard/admin/residentes', { state: { activeTab: 'unidades', filterType: 'sin_residentes' } })}
+              className="border border-amber-200 bg-amber-50 rounded-xl p-6 cursor-pointer hover:shadow-md hover:border-amber-400 transition-all group"
+            >
+              <p className="text-sm text-amber-700 font-medium mb-2 group-hover:text-amber-800 transition-colors">Departamentos sin Residentes</p>
+              <span className="text-3xl font-bold text-amber-600 mb-2 block">{deptosSinResidentes.length}</span>
+              {deptosSinResidentes.length > 0 && (
+                <p className="text-xs text-amber-600/80">
+                  {deptosSinResidentes.slice(0, 5).map(u => (u.torre && u.torre !== 'null') ? `T${u.torre}-${u.numero_depto}` : `Depto ${u.numero_depto}`).join(', ')}
+                  {deptosSinResidentes.length > 5 ? '...' : ''}
+                </p>
+              )}
+            </div>
           </div>
         </section>
 
@@ -201,7 +229,12 @@ export default function DashboardAdmin() {
                   ) : (
                     residentes.map((r) => {
                       const depto = unidades.find(u => u.id === r.unidad)?.numero_depto || r.unidad;
-                      const isUpdated = r.id % 2 !== 0; 
+                      const filledFields = [
+                        r.nombre, r.rut_dni, r.fecha_nacimiento, r.nacionalidad,
+                        r.idioma_principal, r.relacion_jefe_hogar, r.telefono, r.correo,
+                        r.contacto_emergencia_nombre, r.contacto_emergencia_telefono
+                      ].filter(val => val && String(val).trim() !== '').length;
+                      const isUpdated = filledFields >= 10; 
                       return (
                         <tr key={r.id} className="hover:bg-slate-50">
                           <td className="p-4 text-slate-900">{r.nombre} {r.apellidos || ''}</td>

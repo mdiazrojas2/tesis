@@ -20,6 +20,78 @@ export default function AdminConfiguracion() {
 
   const [isSaving, setIsSaving] = useState(false);
 
+  const [unidades, setUnidades] = useState([]);
+  const [loadingUnidades, setLoadingUnidades] = useState(false);
+
+  const fetchUnidades = async () => {
+    setLoadingUnidades(true);
+    try {
+      const res = await axios.get('http://localhost:8000/api/catastro/unidades/');
+      setUnidades(res.data);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoadingUnidades(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'unidades' && unidades.length === 0) {
+      fetchUnidades();
+    }
+  }, [activeTab]);
+
+  const handleDeleteUnidad = async (id, torre, depto) => {
+    const nombre = (torre && torre !== 'null') ? `Torre ${torre} - Depto ${depto}` : `Depto ${depto}`;
+    if (window.confirm(`¿Está seguro de eliminar la unidad ${nombre}? Se eliminarán los residentes asociados.`)) {
+      try {
+        await axios.delete(`http://localhost:8000/api/catastro/unidades/${id}/`);
+        setUnidades(prev => prev.filter(u => u.id !== id));
+      } catch (err) {
+        console.error(err);
+        alert('Error al eliminar unidad');
+      }
+    }
+  };
+
+  const handleCargaMasivaUnidades = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('archivo', file);
+
+    setLoadingUnidades(true);
+    try {
+      const res = await axios.post('http://localhost:8000/api/catastro/unidades/carga-masiva/', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      alert(res.data.detail);
+      fetchUnidades();
+    } catch (err) {
+      console.error(err);
+      alert(err.response?.data?.detail || 'Error en la carga masiva.');
+    } finally {
+      setLoadingUnidades(false);
+      e.target.value = null;
+    }
+  };
+
+  const handleEliminarTodas = async () => {
+    if (window.confirm('¡ATENCIÓN! ¿Está seguro de eliminar TODAS las unidades? Esto eliminará también a TODOS los residentes asociados de forma permanente.')) {
+      if (window.confirm('Por favor confirme nuevamente: ¿ELIMINAR TODAS LAS UNIDADES?')) {
+        try {
+          const res = await axios.delete('http://localhost:8000/api/catastro/unidades/eliminar-todas/');
+          alert(res.data.detail);
+          setUnidades([]);
+        } catch (err) {
+          console.error(err);
+          alert('Error al eliminar unidades');
+        }
+      }
+    }
+  };
+
   useEffect(() => {
     axios.get('http://localhost:8000/api/catastro/condominios/1/')
       .then(res => {
@@ -74,6 +146,12 @@ export default function AdminConfiguracion() {
             onClick={() => setActiveTab('general')}
           >
             General y Notificaciones
+          </button>
+          <button 
+            className={`pb-4 font-medium text-sm border-b-2 transition-colors ${activeTab === 'unidades' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-900'}`}
+            onClick={() => setActiveTab('unidades')}
+          >
+            Gestión de Unidades
           </button>
           <button 
             className={`pb-4 font-medium text-sm border-b-2 transition-colors ${activeTab === 'seguridad' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-900'}`}
@@ -167,6 +245,72 @@ export default function AdminConfiguracion() {
                     </label>
                   </div>
                 </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'unidades' && (
+            <div className="space-y-6 bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+              <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                <div>
+                  <h3 className="font-bold text-slate-900 text-lg">Catastro de Unidades</h3>
+                  <p className="text-xs text-slate-500 mt-1">Gestione las unidades habitacionales (departamentos/casas) del condominio.</p>
+                </div>
+                <div className="flex gap-3">
+                  <button 
+                    onClick={handleEliminarTodas}
+                    className="px-4 py-2 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg text-xs font-medium transition-colors"
+                  >
+                    Eliminar Todas
+                  </button>
+                  <button 
+                    onClick={() => document.getElementById('excel-unidades-upload').click()}
+                    className="px-4 py-2 bg-[#1A7FF2] hover:bg-blue-600 text-white rounded-lg text-xs font-medium transition-colors shadow-sm"
+                  >
+                    Carga Masiva (Excel)
+                  </button>
+                  <input 
+                    type="file" 
+                    id="excel-unidades-upload" 
+                    accept=".xlsx,.xls" 
+                    className="hidden" 
+                    onChange={handleCargaMasivaUnidades}
+                  />
+                </div>
+              </div>
+
+              <div className="border border-slate-200 rounded-xl overflow-hidden mt-4 max-h-[500px] overflow-y-auto">
+                <table className="w-full text-left text-sm">
+                  <thead className="sticky top-0 bg-slate-50">
+                    <tr className="border-b border-slate-200 text-slate-600">
+                      <th className="p-4 font-medium">Unidad</th>
+                      <th className="p-4 font-medium text-right">Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 bg-white">
+                    {loadingUnidades ? (
+                      <tr><td colSpan="2" className="p-4 text-center text-slate-500">Cargando...</td></tr>
+                    ) : unidades.length === 0 ? (
+                      <tr><td colSpan="2" className="p-4 text-center text-slate-500">No hay unidades registradas.</td></tr>
+                    ) : (
+                      unidades.map(u => (
+                        <tr key={u.id} className="hover:bg-slate-50">
+                          <td className="p-4 font-medium text-slate-900">
+                            {(u.torre && u.torre !== 'null') ? `Torre ${u.torre} - Depto ${u.numero_depto}` : `Depto ${u.numero_depto}`}
+                          </td>
+                          <td className="p-4 text-right">
+                            <button 
+                              onClick={() => handleDeleteUnidad(u.id, u.torre, u.numero_depto)}
+                              className="text-red-500 hover:text-red-700 text-xs font-medium transition-colors"
+                            >
+                              Eliminar
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
               </div>
             </div>
           )}
