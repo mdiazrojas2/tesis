@@ -1,140 +1,225 @@
-# Sistema Digital de Catastro para la Gestión de Planes de Emergencia en Condominios
+# Sistema Digital de Catastro para Emergencias
+🏢 Gestión Comunitaria → 📋 Catastro → 🚨 Planes de Emergencia → 💻 Plataforma Digital → ✅ Ley N° 21.442
 
 ![Version](https://img.shields.io/badge/Versión-v1.0.0-blue)
 ![Stack](https://img.shields.io/badge/Stack-React%20%7C%20Django%20REST-success)
 ![License](https://img.shields.io/badge/Licencia-Uso%20Académico-orange)
 
-## 1. Descripción del Proyecto y Justificación Legal
+## 📋 Tabla de Contenidos
+- [🎯 ¿Qué es el Sistema Digital de Catastro?](#-qué-es-el-sistema-digital-de-catastro)
+- [✨ Características Principales](#-características-principales)
+- [🏗️ Arquitectura y Stack Tecnológico](#️-arquitectura-y-stack-tecnológico)
+- [🗂️ Estructura del Proyecto](#️-estructura-del-proyecto)
+- [⚙️ Requisitos Previos](#️-requisitos-previos)
+- [📚 Guía de Instalación Paso a Paso](#-guía-de-instalación-paso-a-paso)
+- [💡 Pruebas y Validación](#-pruebas-y-validación)
+- [❓ Preguntas Frecuentes](#-preguntas-frecuentes)
+- [🔧 Solución de Problemas](#-solución-de-problemas)
+- [📖 Glosario de Términos](#-glosario-de-términos)
 
-El **Sistema Digital de Catastro para Emergencias** es una plataforma tecnológica integral diseñada para resolver de manera automatizada e informática las exigencias operacionales establecidas en el **Artículo 40 de la Ley N° 21.442 sobre Copropiedad Inmobiliaria** en Chile y su respectivo Reglamento. Dicho marco normativo exige a las administraciones mantener un registro exhaustivo y permanentemente actualizado de los residentes de un condominio, haciendo especial énfasis en la identificación de personas con movilidad reducida y condiciones médicas críticas para asegurar una evacuación eficiente ante emergencias.
+---
 
-De manera complementaria, este sistema ha sido desarrollado bajo estrictos estándares de seguridad y confidencialidad para cumplir a cabalidad con la **Ley N° 19.628 sobre Protección de la Vida Privada**. El acceso a los datos de salud se gestiona mediante control perimetral estricto (RBAC) y cifrado de autenticación, asegurando que los datos sensibles sean accedidos única y exclusivamente por los usuarios autorizados bajo el principio de finalidad.
+## 🎯 ¿Qué es el Sistema Digital de Catastro?
 
-## 2. Características Principales (Módulos Base)
+El **Sistema Digital de Catastro para Emergencias** es una plataforma tecnológica integral diseñada para resolver de manera automatizada e informática las exigencias operacionales establecidas en el **Artículo 40 de la Ley N° 21.442 sobre Copropiedad Inmobiliaria** en Chile. 
 
-### 🔹 Módulo Administrador
-Diseñado como el centro de mando (Dashboard) para la administración del condominio. Permite la **carga masiva por lotes de departamentos** y residentes a través de la importación directa de planillas estructuradas de Excel (`.xlsx`). Ofrece un control maestro de habitantes mediante filtros avanzados, permitiendo exportar listados de emergencia y visualizar estadísticas demográficas en tiempo real a través de su bitácora analítica.
+Este software está diseñado para:
+- 📖 **Centralizar** el registro de residentes de un condominio.
+- 🎯 **Identificar** preventivamente a personas con movilidad reducida y condiciones médicas.
+- 🎫 **Resguardar** datos sensibles bajo la Ley N° 19.628 de Protección de la Vida Privada.
+- 🤝 **Automatizar** notificaciones de vencimientos de datos y planes de emergencia.
 
-### 🔹 Módulo Residente
-Proporciona a cada titular una interfaz privada para mantener su ficha demográfica autogestionada. Utiliza **formularios dinámicos condicionales**: si el usuario activa la casilla de *movilidad reducida*, el sistema fuerza automáticamente la captura de datos de asistencia médica, condiciones específicas de salud y contactos de tutores de urgencia, garantizando la integridad de los datos críticos para bomberos y servicios de rescate.
+---
 
-### 🔹 Módulo de Eventos (Señales y Notificaciones)
-Motor reactivo en el backend que despliega notificaciones automáticas y alertas operacionales. El sistema realiza un escrutinio cronológico y notifica con **60 días de anticipación** al cumplimiento de los plazos normativos:
-- Los datos y fichas de salud de los residentes requieren confirmación/renovación cada **6 meses**.
-- Los planes documentales de emergencia tienen vencimiento **anual**.
+## ✨ Características Principales
 
-## 3. Diagrama de Arquitectura de Software
+- 🏢 **Módulo Administrador**: Carga masiva por lotes desde Excel (.xlsx), control maestro de habitantes y bitácora analítica.
+- 🏠 **Módulo Residente**: Ficha demográfica autogestionable con formularios dinámicos condicionales para capturar datos de movilidad y asistencia médica.
+- 🔄 **Módulo de Eventos**: Sistema de notificaciones automáticas y alertas operando 60 días antes de los plazos normativos (renovación semestral de datos).
+- 🔐 **Control Perimetral**: Arquitectura protegida mediante autenticación JWT y control de acceso basado en roles (RBAC).
+- 🎓 **Adopción Digital**: Guías interactivas (Tours) nativas para facilitar el autoaprendizaje del usuario.
 
-La plataforma emplea una arquitectura desacoplada basada en Servicios API RESTful, asegurando alta disponibilidad, escalabilidad y una clara separación de responsabilidades entre la capa de presentación y la lógica de negocio.
+---
+
+## 🏗️ Arquitectura y Stack Tecnológico
+
+> 🚀 El proyecto emplea una arquitectura desacoplada basada en **Servicios API RESTful**, asegurando alta disponibilidad y clara separación de responsabilidades.
+
+### ⚙️ El Backend (El Motor Lógico)
+- **Lenguaje**: Python 3
+- **Framework**: Django REST Framework (DRF)
+- **Persistencia**: SQLite3 (Desarrollo) / PostgreSQL (Producción, bajo principios ACID)
+- **Seguridad**: SimpleJWT (JSON Web Tokens)
+- **Automatización**: Django Signals (Eventos reactivos `post_save`, `post_delete`)
+- **Procesos Asíncronos**: Hilos (Threading) y protocolo SMTP para correos.
+
+### 🎨 El Frontend (La Capa de Presentación)
+- **Librería Core**: React.js
+- **Empaquetador**: Vite (Alta velocidad de desarrollo)
+- **Estilos**: Tailwind CSS (Diseño "Glassmorphism" limpio y responsivo)
+- **Conectividad**: Axios (Cliente HTTP)
+- **Didáctica**: React-Joyride (Tours interactivos)
+
+### 🗺️ Diagrama de Arquitectura
 
 ```text
-+-------------------------------------------------------------------------------+
-|                             CLIENTE (FRONTEND)                                |
-|                                                                               |
-|   +-------------------+    +-------------------+    +---------------------+   |
-|   |  React.js UI      |    | React-Joyride     |    | Cliente HTTP        |   |
-|   |  (Tailwind CSS,   +--->| (Tours Didácticos +--->| (Axios)             |   |
-|   |   Vite)           |    |  nativos)         |    |                     |   |
-|   +-------------------+    +-------------------+    +---------+-----------+   |
-+---------------------------------------------------------------|---------------+
-                                                                | (Peticiones JSON)
-                                                                v
-+---------------------------------------------------------------|---------------+
-|                             SERVIDOR (BACKEND)                |               |
-|                                                               v               |
-|   +-----------------------------------------------------------+-----------+   |
-|   | MIDDLEWARE DE SEGURIDAD (SimpleJWT)                                   |   |
-|   | (Validación de Token, Control Perimetral HTTP 401/403, RBAC)          |   |
-|   +-----------------------------------+-----------------------------------+   |
-|                                       |                                       |
-|                                       v                                       |
-|   +-----------------------------------+-----------------------------------+   |
-|   | ENRUTAMIENTO Y LÓGICA (Django REST Framework)                         |   |
-|   |                                                                       |   |
-|   |    +---------------+        +---------------+                         |   |
-|   |    | ViewSets      +------->| Serializers   |                         |   |
-|   |    | (Controlador) |<-------+ (Sanitización)|                         |   |
-|   |    +-------+-------+        +-------+-------+                         |   |
-|   +------------|------------------------|---------------------------------+   |
-|                v                        v                                     |
-|   +------------+------------------------+---------------------------------+   |
-|   | CAPA DE PERSISTENCIA Y EVENTOS (Django ORM & Signals)                 |   |
-|   |                                                                       |   |
-|   |    +------------------------+      +------------------------------+   |   |
-|   |    | Modelos Relacionales   +----->| Django Signals               |   |   |
-|   |    | (Condominio, Residente)|      | (post_save, post_delete)     |   |   |
-|   |    +----------+-------------+      +--------------+---------------+   |   |
-|   |               |                                   | (Despacho asíncrono)  |
-|   +---------------|-----------------------------------|---------------+   |
-|                   |                                   |               |   |
-|                   v                                   v               |   |
-|       +-----------+-----------+          +------------+-----------+   |   |
-|       | Base de Datos         |          | Hilo en Segundo Plano  |   |   |
-|       | SQLite3 / PostgreSQL  |          | (Threading / SMTP)     |   |   |
-|       | (Principios ACID)     |          | Notificaciones E-mail  |   |   |
-|       +-----------------------+          +------------------------+   |   |
-+-------------------------------------------------------------------------------+
++-------------------+      JSON HTTP       +-------------------+
+|  CLIENTE (REACT)  |  <---------------->  | SERVIDOR (DJANGO) |
+| - Tailwind CSS    |      (Axios)         | - DRF ViewSets    |
+| - React-Joyride   |                      | - Middleware JWT  |
++-------------------+                      +---------+---------+
+                                                     |
+                                                     v
+                                           +-------------------+
+                                           | ORM & BASE DATOS  |
+                                           | - SQLite/Postgres |
+                                           | - Django Signals  |
+                                           +---------+---------+
+                                                     |
+                                                     v
+                                           +-------------------+
+                                           | TAREAS ASÍNCRONAS |
+                                           | - Correos SMTP    |
+                                           +-------------------+
 ```
 
-## 4. Requisitos Previos e Instructivo de Instalación
+---
 
-El siguiente instructivo está diseñado para el despliegue del ecosistema en entornos de desarrollo local sobre sistemas operativos Windows (utilizando **PowerShell** o **Git Bash**).
+## 🗂️ Estructura del Proyecto
 
-### 4.1. Clonación de Repositorio
+```
+Tesis/
+├── 📁 backend/              # Lógica de servidor y API
+│   ├── catastro/            # Aplicación principal Django (Modelos, Vistas, Signals)
+│   ├── core/                # Configuración global del proyecto
+│   ├── tests.py             # Pruebas unitarias y de integración (Pytest)
+│   └── requirements.txt     # Dependencias de Python
+├── 📁 frontend/             # Interfaz de usuario React
+│   ├── src/
+│   │   ├── components/      # Componentes UI (Tours, Sidebar, Tablas)
+│   │   ├── pages/           # Vistas principales (Admin/Residente)
+│   │   └── utils/           # Validaciones (RUT, API config)
+│   └── package.json         # Dependencias de Node.js
+└── README.md                # Esta guía
+```
+
+---
+
+## ⚙️ Requisitos Previos
+
+> 🚨 **IMPORTANTE**: Asegúrate de tener las siguientes herramientas instaladas en tu sistema antes de comenzar.
+
+- Python 3.10 o superior
+- Node.js (v18+)
+- Git
+- Terminal compatible (PowerShell o Git Bash)
+
+---
+
+## 📚 Guía de Instalación Paso a Paso
+
+### Paso 1: Clonación y Preparación 📋
 ```bash
 git clone <URL_DEL_REPOSITORIO>
-cd <DIRECTORIO_DEL_PROYECTO>
+cd tesis
 ```
-La estructura base contendrá los directorios `/backend` y `/frontend`.
 
-### 4.2. Instalación y Configuración del Backend (Django)
-Abre una terminal y dirígete al directorio del servidor:
-```bash
-cd backend
-```
-1. **Creación del Entorno Virtual (venv):**
+### Paso 2: Despliegue del Backend ⚙️
+
+1. **Navega al directorio e inicializa el entorno virtual:**
    ```bash
+   cd backend
    python -m venv venv
    ```
-2. **Activación del Entorno Virtual:**
-   - En PowerShell: `.\venv\Scripts\Activate.ps1`
-   - En Git Bash: `source venv/Scripts/activate`
-3. **Instalación de Dependencias:**
+
+2. **Activa el entorno (PowerShell):**
+   ```powershell
+   .\venv\Scripts\Activate.ps1
+   ```
+
+3. **Instala dependencias y prepara la base de datos:**
    ```bash
    pip install -r requirements.txt
-   ```
-4. **Configuración de Variables de Entorno (`.env`):**
-   Crea un archivo `.env` en la raíz de `/backend` y configura los parámetros de seguridad, base de datos y SMTP para el despacho de correos (ej. `EMAIL_HOST_USER`, `SECRET_KEY`).
-5. **Migraciones de Base de Datos:**
-   ```bash
    python manage.py makemigrations
    python manage.py migrate
    ```
-6. **Ejecución del Servidor:**
+
+4. **Inicia el servidor API:**
    ```bash
    python manage.py runserver
    ```
-   El backend estará escuchando en `http://localhost:8000`.
+   *(El backend correrá en http://localhost:8000)*
 
-### 4.3. Instalación y Configuración del Frontend (React.js)
-Abre una segunda terminal y dirígete al directorio del cliente:
+### Paso 3: Despliegue del Frontend 🎨
+
+Abre una **nueva terminal**, ingresa a la carpeta del proyecto y ejecuta:
 ```bash
 cd frontend
+npm install
+npm run dev
 ```
-1. **Instalación de Dependencias de Node:**
-   ```bash
-   npm install
-   ```
-2. **Ejecución del Servidor de Desarrollo (Vite):**
-   ```bash
-   npm run dev
-   ```
-   La aplicación web estará disponible en `http://localhost:5173`.
+*(La plataforma estará disponible en http://localhost:5173)*
 
-## 5. Estrategia de Pruebas y Validación (Entorno Controlado)
+---
 
-Al tratarse de un prototipo funcional (MVP) de etapa temprana, el sistema no fue implementado en un entorno de producción real o cloud público. No obstante, el ecosistema fue validado directamente y de manera rigurosa en el entorno de desarrollo mediante los siguientes vectores de calidad:
+## 💡 Pruebas y Validación
 
-- **Pruebas Unitarias de Consistencia:** Validación a nivel de Serializadores (DRF) comprobando que las peticiones con estructuras corruptas, campos críticos omitidos o rut inválidos fueran rechazadas nativamente con códigos de error `HTTP 400 Bad Request`.
-- **Pruebas de Regresión en Signals:** Control de la inyección y persistencia de alertas automatizadas en la base de datos relacional. Se testeó exhaustivamente la mitigación de bucles de recursividad infinita (asegurando el uso condicional del parámetro `created` dentro de las funciones receptoras de la señal).
-- **Tests de Penetración Perimetral (API):** Validación de los bloqueos de seguridad de SimpleJWT. Se simularon peticiones no autorizadas cruzadas entre inquilinos y accesos anónimos, constatando el rechazo eficiente por parte del servidor mediante códigos `HTTP 401 Unauthorized` y `HTTP 403 Forbidden`, asegurando el blindaje del módulo documental.
+El sistema ha sido rigurosamente validado en entornos de desarrollo mediante metodologías controladas:
+
+- 🧪 **Pruebas Unitarias de Consistencia**: Verificación de bloqueo de datos corruptos mediante validación matemática de RUTs y formatos, devolviendo errores `HTTP 400` en los serializadores.
+- 🔄 **Pruebas de Regresión en Signals**: Control de persistencia y mitigación de bucles infinitos en el motor de alertas operacionales (mediante el parámetro `created`).
+- 🛡️ **Tests de Penetración Perimetral**: Validación estricta de bloqueos `HTTP 403 Forbidden` y `401 Unauthorized` simulando peticiones con tokens JWT inválidos o roles cruzados.
+
+---
+
+## ❓ Preguntas Frecuentes
+
+**P: ¿Por qué los datos médicos son obligatorios si se marca "Movilidad Reducida"?**
+R: Bajo la Ley N° 21.442, esta información es crítica para planificar rescates efectivos por parte de Bomberos durante emergencias en edificios de altura.
+
+**P: ¿Qué pasa cuando caduca el token JWT?**
+R: El sistema cerrará la sesión de forma segura por políticas de protección de la vida privada (Ley N° 19.628). El usuario deberá iniciar sesión nuevamente.
+
+**P: ¿Cómo evita el sistema duplicar departamentos al subir Excel?**
+R: El algoritmo de validación del backend busca coincidencias de "Número" y "Torre". Si existe, actualiza a los residentes; si no, arroja un aviso previniendo bases de datos sucias.
+
+---
+
+## 🔧 Solución de Problemas
+
+### Problema: No se envían los correos automáticos
+**Solución**: Verifica que hayas configurado las variables de entorno (`EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD`) en el archivo `.env` del backend.
+
+### Problema: El frontend muestra "Network Error"
+**Solución**: Asegúrate de que el servidor de Django (`runserver`) esté ejecutándose en otra terminal antes de levantar Vite.
+
+### Problema: Pytest no se reconoce en Windows
+**Solución**: Asegúrate de que el entorno virtual `venv` esté activo o ejecuta las pruebas usando el comando seguro: `python -m pytest -v`.
+
+---
+
+## 📖 Glosario de Términos
+
+### 🔤 **Términos Técnicos**
+
+**DRF (Django REST Framework)**
+> Herramienta robusta de Python para construir Web APIs rápidamente.
+
+**JWT (JSON Web Token)**
+> Estándar seguro para transmitir información autenticada como un objeto JSON cifrado.
+
+**RBAC (Role-Based Access Control)**
+> Sistema de seguridad que restringe el acceso a la red basándose en los roles de los usuarios (Ej: Admin vs Residente).
+
+**Signals**
+> Despachadores de eventos en Django que permiten reaccionar automáticamente cuando ocurren acciones en la base de datos (como guardar o borrar un archivo).
+
+### ⚖️ **Marco Normativo**
+
+**Ley N° 21.442**
+> Ley de Copropiedad Inmobiliaria chilena que regula la convivencia, administración y medidas de emergencia en condominios.
+
+**Ley N° 19.628**
+> Ley de Protección de la Vida Privada que salvaguarda el tratamiento de datos personales, especialmente los sensibles (salud).
+
+---
