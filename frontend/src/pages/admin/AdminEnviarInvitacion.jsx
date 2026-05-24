@@ -32,7 +32,7 @@ export default function AdminEnviarInvitacion() {
       <header className="w-full px-6 py-4 border-b border-slate-100 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Building2 className="w-6 h-6 text-slate-900" />
-          <span className="font-bold text-slate-900 text-lg">CondoConnect</span>
+          <span className="font-bold text-slate-900 text-lg">Sistema Digital de Catastro para Emergencias</span>
         </div>
       </header>
 

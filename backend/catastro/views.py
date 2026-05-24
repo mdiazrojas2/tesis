@@ -126,7 +126,7 @@ class ResidenteViewSet(viewsets.ModelViewSet):
         # Construir enlace (asumimos que frontend corre en localhost:5173)
         link = f"http://localhost:5173/establecer-clave/{uid}/{token}"
         # Enviar email
-        subject = "Invitación de acceso a CondoConnect"
+        subject = "Invitación de acceso a Sistema Digital de Catastro para Emergencias"
         message = f"Hola {residente.nombre},\n\nSe ha creado una cuenta para ti en el portal.\nHaz clic en el siguiente enlace para establecer tu contraseña y activar tu acceso:\n{link}\n\nSi no solicitaste esto, ignora el mensaje."
         send_email_async(subject=subject, message=message, recipient_list=[residente.correo])
         return Response({'detail': 'Invitación enviada correctamente.'}, status=status.HTTP_200_OK)
@@ -146,7 +146,7 @@ class ResidenteViewSet(viewsets.ModelViewSet):
         token = token_generator.make_token(user)
         uid = urlsafe_base64_encode(force_bytes(user.pk))
         link = f"http://localhost:5173/establecer-clave/{uid}/{token}"
-        subject = "Restablecer contraseña - CondoConnect"
+        subject = "Restablecer contraseña - Sistema Digital de Catastro para Emergencias"
         message = f"Hola,\n\nHaz clic en el siguiente enlace para restablecer tu contraseña:\n{link}\n\nSi no solicitaste esto, ignora el mensaje."
         send_email_async(subject=subject, message=message, recipient_list=[residente.correo])
         return Response({'detail': 'Correo de restablecimiento enviado.'}, status=status.HTTP_200_OK)
@@ -325,7 +325,7 @@ class ResidenteViewSet(viewsets.ModelViewSet):
                         token = token_generator.make_token(user)
                         uid = urlsafe_base64_encode(force_bytes(user.pk))
                         link = f"http://localhost:5173/establecer-clave/{uid}/{token}"
-                        subject = "Invitación de acceso a CondoConnect"
+                        subject = "Invitación de acceso a Sistema Digital de Catastro para Emergencias"
                         message = f"Hola {nombres},\n\nSe ha creado una cuenta para ti en el portal.\nHaz clic en el siguiente enlace para establecer tu contraseña:\n{link}\n\nSi no solicitaste esto, ignora el mensaje."
                         send_email_async(subject=subject, message=message, recipient_list=[correo])
                         invitaciones += 1
@@ -378,7 +378,7 @@ class RecuperarClaveView(viewsets.ViewSet):
         token = token_generator.make_token(user)
         uid = urlsafe_base64_encode(force_bytes(user.pk))
         link = f"http://localhost:5173/establecer-clave/{uid}/{token}"
-        subject = "Recuperación de contraseña - CondoConnect"
+        subject = "Recuperación de contraseña - Sistema Digital de Catastro para Emergencias"
         message = (
             f"Hola {user.get_full_name() or user.username},\n\n"
             f"Recibimos una solicitud para restablecer tu contraseña.\n"
