@@ -276,12 +276,16 @@ class ResidenteViewSet(viewsets.ModelViewSet):
                 fecha_nacimiento = None
             
             try:
-                # Buscar o crear unidad
-                unidad, _ = Unidad.objects.get_or_create(
-                    condominio=condominio,
-                    torre=data.get('torre', ''),
-                    numero_depto=numero_depto
-                )
+                # Buscar unidad, considerando que torre puede ser None o ''
+                torre_str = data.get('torre', '')
+                if torre_str:
+                    unidad = Unidad.objects.filter(condominio=condominio, torre=torre_str, numero_depto=numero_depto).first()
+                else:
+                    unidad = Unidad.objects.filter(condominio=condominio, numero_depto=numero_depto, torre__in=[None, '']).first()
+                
+                if not unidad:
+                    errores.append(f"Fila {row_idx}: La unidad Depto {numero_depto} (Torre {torre_str or 'N/A'}) no existe. Debe crear la unidad primero.")
+                    continue
                 
                 correo = data.get('correo', '')
                 if correo:
@@ -415,5 +419,5 @@ class NotificacionViewSet(viewsets.ModelViewSet):
             unidades_ids = residentes_mios.values_list('unidad_id', flat=True)
             # Retorna notificaciones de esas unidades o globales (unidad=None)
             from django.db.models import Q
-            qs = qs.filter(Q(unidad__in=unidades_ids) | Q(unidad__isnull=True))
+            qs = qs.filter(Q(unidad__in=unidades_ids) | Q(unidad__isnull=True)).exclude(titulo="Residente eliminado")
         return qs

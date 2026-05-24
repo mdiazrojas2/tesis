@@ -19,6 +19,7 @@ const RELACION_MAP = {
 
 export default function AdminResidentes() {
   const [activeTab, setActiveTab] = useState('residentes'); // 'residentes' | 'cuentas' | 'unidades'
+  const [cuentasSubTab, setCuentasSubTab] = useState('todos'); // 'todos' | 'activas' | 'pendientes'
   const [expandedUnidades, setExpandedUnidades] = useState({});
   const navigate = useNavigate();
   const [residentes, setResidentes] = useState([]);
@@ -281,7 +282,17 @@ export default function AdminResidentes() {
       matchFilter = false; // Residentes individuales no pueden ser "unidades sin residentes"
     }
 
-    return matchSearch && matchFilter;
+    // Cuentas sub tab filter
+    let matchCuentas = true;
+    if (activeTab === 'cuentas') {
+      if (cuentasSubTab === 'activas') {
+        matchCuentas = r.tiene_cuenta === true;
+      } else if (cuentasSubTab === 'pendientes') {
+        matchCuentas = r.tiene_cuenta === false;
+      }
+    }
+
+    return matchSearch && matchFilter && matchCuentas;
   });
 
   // Filter unidades para que solo muestren si tienen residentes en filteredResidentes (o buscar por string si la query aplica a la unidad)
@@ -427,8 +438,25 @@ export default function AdminResidentes() {
           
           {activeTab === 'cuentas' && (
             <div className="flex flex-wrap items-center justify-between gap-4 mt-2">
-              <div className="flex gap-2">
-                {/* Dummy visual buttons if needed, or removed since we use select */}
+              <div className="tour-step-subtabs flex bg-slate-100 p-1 rounded-lg">
+                <button 
+                  onClick={() => setCuentasSubTab('todos')}
+                  className={`px-4 py-2 rounded-md text-xs font-medium transition-colors ${cuentasSubTab === 'todos' ? 'bg-white shadow-sm text-slate-800' : 'text-slate-500 hover:text-slate-700'}`}
+                >
+                  Todos
+                </button>
+                <button 
+                  onClick={() => setCuentasSubTab('activas')}
+                  className={`px-4 py-2 rounded-md text-xs font-medium transition-colors ${cuentasSubTab === 'activas' ? 'bg-white shadow-sm text-slate-800' : 'text-slate-500 hover:text-slate-700'}`}
+                >
+                  Cuentas Activas
+                </button>
+                <button 
+                  onClick={() => setCuentasSubTab('pendientes')}
+                  className={`px-4 py-2 rounded-md text-xs font-medium transition-colors ${cuentasSubTab === 'pendientes' ? 'bg-white shadow-sm text-slate-800' : 'text-slate-500 hover:text-slate-700'}`}
+                >
+                  Sin Cuenta (Pendientes)
+                </button>
               </div>
               <div className="flex gap-2">
                 <button 
@@ -468,6 +496,7 @@ export default function AdminResidentes() {
                     <>
                       <th className="p-4 font-medium">Relación</th>
                       <th className="p-4 font-medium text-center">Estado Ficha</th>
+                      <th className="tour-step-vigencia p-4 font-medium text-center">Vigencia Datos</th>
                     </>
                   ) : (
                     <>
@@ -488,6 +517,18 @@ export default function AdminResidentes() {
                     const unitObj = unidades.find(u => u.id === row.unidad);
                     const unitStr = unitObj ? getUnitString(unitObj) : `ID Unidad: ${row.unidad}`;
                     const isUpdated = isFichaCompleta(row);
+                    
+                    let diasVigencia = 0;
+                    let isExpired = true;
+                    let isWarning = false;
+                    if (row.fecha_ultima_actualizacion) {
+                      const ultima = new Date(row.fecha_ultima_actualizacion);
+                      const hoy = new Date();
+                      const diasPasados = Math.floor((hoy - ultima) / (1000 * 60 * 60 * 24));
+                      diasVigencia = 180 - diasPasados;
+                      isExpired = diasVigencia <= 0;
+                      isWarning = diasVigencia > 0 && diasVigencia <= 30;
+                    }
 
                     return (
                       <tr key={row.id} className="hover:bg-slate-50 transition-colors">
@@ -502,6 +543,17 @@ export default function AdminResidentes() {
                                 <span className={`inline-flex px-4 py-1.5 rounded-lg text-xs font-medium ${isUpdated ? 'bg-slate-100 text-slate-950 font-semibold' : 'bg-slate-100 text-slate-500'}`}>
                                   {isUpdated ? 'Completo' : 'Incompleto'}
                                 </span>
+                              </div>
+                            </td>
+                            <td className="p-4">
+                              <div className="flex justify-center">
+                                {isExpired ? (
+                                  <span className="inline-flex px-3 py-1 rounded-lg text-[10px] font-medium bg-rose-100 text-rose-800">Vencido</span>
+                                ) : isWarning ? (
+                                  <span className="inline-flex px-3 py-1 rounded-lg text-[10px] font-medium bg-amber-100 text-amber-800">Vence en {diasVigencia} d</span>
+                                ) : (
+                                  <span className="inline-flex px-3 py-1 rounded-lg text-[10px] font-medium bg-emerald-100 text-emerald-800">Vigente ({diasVigencia} d)</span>
+                                )}
                               </div>
                             </td>
                             <td className="tour-step-table-actions p-4 text-blue-600 font-medium leading-relaxed max-w-[200px]">

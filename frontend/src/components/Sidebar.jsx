@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Home, FileText, HelpCircle, Users, Bell, Settings, Building, LogOut } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Menu, X, Home, FileText, HelpCircle, Users, Bell, Settings, Building, LogOut } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import PageTour from './PageTour';
 
@@ -7,6 +7,12 @@ export default function Sidebar({ role, unitInfo }) {
   const location = useLocation();
   const navigate = useNavigate();
   const [runTour, setRunTour] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
+
+  // Close sidebar on route change on mobile
+  useEffect(() => {
+    setIsOpen(false);
+  }, [location]);
 
   const residenteLinks = [
     { name: 'Inicio', icon: Home, path: '/dashboard/residente' },
@@ -27,14 +33,32 @@ export default function Sidebar({ role, unitInfo }) {
   const links = role === 'admin' ? adminLinks : residenteLinks;
 
   return (
-    <aside className="w-64 bg-white border-r border-slate-100 flex flex-col min-h-screen">
+    <>
+      {/* Mobile Menu Button */}
+      <button 
+        onClick={() => setIsOpen(!isOpen)}
+        className="md:hidden fixed top-6 right-6 z-50 p-2.5 bg-white text-slate-700 rounded-xl shadow-sm border border-slate-200 hover:bg-slate-50 transition-colors"
+      >
+        {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+      </button>
+
+      {/* Overlay for mobile */}
+      {isOpen && (
+        <div 
+          className="md:hidden fixed inset-0 bg-slate-900/20 backdrop-blur-sm z-40" 
+          onClick={() => setIsOpen(false)}
+        />
+      )}
+
+      {/* Sidebar */}
+      <aside className={`fixed inset-y-0 left-0 z-40 w-64 shrink-0 bg-white border-r border-slate-100 flex flex-col h-screen transition-transform duration-300 ease-in-out md:sticky md:top-0 md:translate-x-0 ${isOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full'}`}>
       {/* Sidebar Header */}
       <div className="p-6">
         {role === 'residente' ? (
           <div>
             <h2 className="font-semibold text-slate-800">Condominio Volcanes</h2>
             <p className="text-xs text-slate-500 mt-1">
-              {unitInfo ? ((unitInfo.torre && unitInfo.torre !== 'null') ? `Depto ${unitInfo.numero_depto} - Torre ${unitInfo.torre}` : `Depto ${unitInfo.numero_depto}`) : 'Depto 404 - Torre B'}
+              {unitInfo ? ((unitInfo.torre && unitInfo.torre !== 'null') ? `Depto ${unitInfo.numero_depto} - Torre ${unitInfo.torre}` : `Depto ${unitInfo.numero_depto}`) : ''}
             </p>
           </div>
         ) : (
@@ -67,17 +91,6 @@ export default function Sidebar({ role, unitInfo }) {
       </nav>
 
       {/* Logout */}
-      {/* Bottom Right Floating Tour Button */}
-      <div className="fixed bottom-8 right-8 z-50">
-        <button 
-          onClick={() => setRunTour(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 shadow-md text-sm font-medium text-[#1A7FF2] rounded-full hover:bg-blue-50 hover:border-blue-200 transition-all"
-        >
-          <HelpCircle className="w-5 h-5" />
-          Tour Interactivo
-        </button>
-      </div>
-
       {/* Bottom Actions */}
       <div className="p-4 border-t border-slate-100 flex flex-col gap-2">
         <button 
@@ -95,7 +108,20 @@ export default function Sidebar({ role, unitInfo }) {
           Cerrar Sesión
         </button>
       </div>
-      <PageTour runTour={runTour} setRunTour={setRunTour} />
     </aside>
+
+    {/* Bottom Right Floating Tour Button */}
+    <div className="fixed bottom-8 right-8 z-50">
+      <button 
+        onClick={() => setRunTour(true)}
+        className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 shadow-md text-sm font-medium text-[#1A7FF2] rounded-full hover:bg-blue-50 hover:border-blue-200 transition-all"
+      >
+        <HelpCircle className="w-5 h-5" />
+        Tour Interactivo
+      </button>
+    </div>
+    
+    <PageTour runTour={runTour} setRunTour={setRunTour} />
+    </>
   );
 }

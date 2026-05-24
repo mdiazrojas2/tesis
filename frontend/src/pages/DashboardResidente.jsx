@@ -12,12 +12,14 @@ export default function DashboardResidente() {
   const [residente, setResidente] = useState(null);
   const [diasRestantes, setDiasRestantes] = useState(180);
   const [isConfirming, setIsConfirming] = useState(false);
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
 
   useEffect(() => {
     if (unitLoading || !unitId) return;
 
     // Count residents in same unit (use admin-level endpoint won't work for residents)
-    // The resident count comes from the hook - we already know at least 1
+    // We will update it when fetching residentes data below
     setResidentesCount(1);
 
     // Fetch notifications (backend already filters by unit for residents)
@@ -34,6 +36,7 @@ export default function DashboardResidente() {
     api.get('catastro/residentes/')
       .then(r => {
         if (r.data.length > 0) {
+          setResidentesCount(r.data.length);
           // Tomamos el primer residente (generalmente el jefe de hogar logueado)
           const myRes = r.data[0];
           setResidente(myRes);
@@ -72,7 +75,7 @@ export default function DashboardResidente() {
 
         {residente && (
           <section className="mb-8">
-            <div className={`p-5 rounded-xl border flex flex-col md:flex-row justify-between items-start md:items-center gap-4 ${diasRestantes <= 30 ? 'bg-rose-50 border-rose-200' : 'bg-blue-50 border-blue-200'}`}>
+            <div className={`tour-step-vigencia-datos p-5 rounded-xl border flex flex-col md:flex-row justify-between items-start md:items-center gap-4 ${diasRestantes <= 30 ? 'bg-rose-50 border-rose-200' : 'bg-blue-50 border-blue-200'}`}>
               <div>
                 <h3 className={`font-bold ${diasRestantes <= 30 ? 'text-rose-900' : 'text-blue-900'}`}>
                   Vigencia de Datos (Revisión Semestral)
@@ -111,10 +114,10 @@ export default function DashboardResidente() {
             </div>
 
             <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
-              <p className="text-sm text-slate-600 mb-2">Incidentes ocurridos en el último período</p>
+              <p className="text-sm text-slate-600 mb-2">Integrantes del grupo familiar</p>
               <div className="flex items-baseline gap-3">
-                <span className="text-3xl font-bold text-slate-900">0</span>
-                <span className="text-sm font-medium text-emerald-600">Estable</span>
+                <span className="text-3xl font-bold text-slate-900">{residentesCount}</span>
+                <span className="text-sm font-medium text-blue-600">Registrados</span>
               </div>
             </div>
 
@@ -122,22 +125,84 @@ export default function DashboardResidente() {
         </section>
 
         <section className="tour-step-notifications mb-12">
-          <h2 className="text-lg font-bold text-slate-900 mb-4">Notificaciones y Avisos</h2>
-          {notificaciones.length === 0 ? (
-            <p className="text-sm text-slate-500">No hay notificaciones por el momento.</p>
-          ) : (
-            <div className="space-y-6">
-              {notificaciones.map((note) => (
-                <div key={note.id} className="flex flex-col md:flex-row gap-6 items-start bg-white p-4 border border-slate-100 rounded-xl shadow-sm">
-                  <div className="flex-1">
-                    <h3 className="font-bold text-slate-900 mb-1">{note.titulo}</h3>
-                    <p className="text-sm text-slate-600">{note.mensaje}</p>
-                    {note.fecha && <p className="text-[10px] text-slate-400 mt-2">{new Date(note.fecha).toLocaleString()}</p>}
-                  </div>
-                </div>
-              ))}
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+            <h2 className="text-lg font-bold text-slate-900">Notificaciones y Avisos</h2>
+            <div className="tour-step-notifications-filter flex items-center gap-2 text-sm">
+              <div className="flex flex-col">
+                <label className="text-[10px] text-slate-500 mb-1">Desde</label>
+                <input 
+                  type="date" 
+                  value={dateFrom} 
+                  onChange={e => setDateFrom(e.target.value)}
+                  className="border border-slate-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                />
+              </div>
+              <div className="flex flex-col">
+                <label className="text-[10px] text-slate-500 mb-1">Hasta</label>
+                <input 
+                  type="date" 
+                  value={dateTo} 
+                  onChange={e => setDateTo(e.target.value)}
+                  className="border border-slate-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                />
+              </div>
+              {(dateFrom || dateTo) && (
+                <button 
+                  onClick={() => {setDateFrom(''); setDateTo('');}}
+                  className="mt-5 text-xs text-blue-600 hover:underline"
+                >
+                  Limpiar
+                </button>
+              )}
             </div>
-          )}
+          </div>
+
+          {(() => {
+            const filtered = notificaciones.filter(note => {
+              if (!note.fecha) return true;
+              const noteDate = new Date(note.fecha).getTime();
+              if (dateFrom && noteDate < new Date(dateFrom).getTime()) return false;
+              if (dateTo && noteDate > new Date(dateTo).getTime() + 86400000) return false;
+              return true;
+            }).sort((a, b) => new Date(b.fecha || 0) - new Date(a.fecha || 0));
+
+            const hasFilter = dateFrom || dateTo;
+            const displayNotes = hasFilter ? filtered : filtered.slice(0, 5);
+
+            if (displayNotes.length === 0) {
+              return <p className="text-sm text-slate-500">No hay notificaciones para mostrar.</p>;
+            }
+
+            return (
+              <div className="border border-slate-200 rounded-xl overflow-x-auto bg-white">
+                <table className="w-full text-left text-sm">
+                  <thead>
+                    <tr className="border-b border-slate-200 bg-slate-50 text-slate-600">
+                      <th className="p-4 font-medium">Fecha</th>
+                      <th className="p-4 font-medium">Título</th>
+                      <th className="p-4 font-medium">Mensaje</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {displayNotes.map(note => (
+                      <tr key={note.id} className="hover:bg-slate-50 transition-colors">
+                        <td className="p-4 text-slate-500 whitespace-nowrap">
+                          {note.fecha ? new Date(note.fecha).toLocaleString('es-CL', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-'}
+                        </td>
+                        <td className="p-4 text-slate-900 font-medium">{note.titulo}</td>
+                        <td className="p-4 text-slate-600">{note.mensaje}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                {!hasFilter && filtered.length > 5 && (
+                  <div className="p-3 text-center border-t border-slate-100">
+                    <p className="text-xs text-slate-500">Mostrando las 5 notificaciones más recientes. Use los filtros para ver más.</p>
+                  </div>
+                )}
+              </div>
+            );
+          })()}
         </section>
 
         <section>

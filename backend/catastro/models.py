@@ -240,12 +240,15 @@ def notify_residente_saved(sender, instance, created, **kwargs):
 @receiver(post_delete, sender=Residente)
 def notify_residente_deleted(sender, instance, **kwargs):
     condominio = instance.unidad.condominio if instance.unidad else None
-    Notificacion.objects.create(
-        condominio=condominio,
-        unidad=instance.unidad,
-        titulo="Residente eliminado",
-        mensaje=f"El residente {instance.nombre} {instance.apellidos or ''} (Unidad {instance.unidad.numero_depto if instance.unidad else 'Desconocida'}) ha sido eliminado.",
-        tipo="Informativa",
-        estado="Enviada"
-    )
+    try:
+        Notificacion.objects.create(
+            condominio=condominio,
+            unidad=None, # Avoid IntegrityError if the unidad was deleted via cascade
+            titulo="Residente eliminado",
+            mensaje=f"El residente {instance.nombre} {instance.apellidos or ''} (Unidad {instance.unidad.numero_depto if instance.unidad else 'Desconocida'}) ha sido eliminado.",
+            tipo="Informativa",
+            estado="Enviada"
+        )
+    except Exception as e:
+        print("Error al crear notificacion de eliminacion:", e)
 

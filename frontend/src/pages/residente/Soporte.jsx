@@ -28,7 +28,7 @@ export default function Soporte() {
     },
     {
       question: '¿Cómo puedo contactar a la administración?',
-      answer: 'Puedes contactar a la administración usando el formulario en esta misma página o al correo admin@volcanes.cl.'
+      answer: `Puedes contactar a la administración usando el formulario en esta misma página o al correo ${adminEmail}.`
     },
     {
       question: '¿Dónde encuentro el reglamento del condominio?',
@@ -106,20 +106,6 @@ export default function Soporte() {
           </div>
         </section>
 
-        {/* Recursos de Ayuda */}
-        <section className="max-w-3xl">
-          <h2 className="text-xl font-bold text-slate-900 mb-6">Recursos de Ayuda</h2>
-          <div className="space-y-2">
-            <a href="#" className="flex items-center justify-between p-4 hover:bg-slate-50 rounded-lg transition-colors group border-b border-slate-100 last:border-0">
-              <span className="text-slate-700 font-medium text-sm">Guía del Residente</span>
-              <ArrowRight className="w-5 h-5 text-slate-400 group-hover:text-slate-900 transition-colors" />
-            </a>
-            <a href="#" className="flex items-center justify-between p-4 hover:bg-slate-50 rounded-lg transition-colors group border-b border-slate-100 last:border-0">
-              <span className="text-slate-700 font-medium text-sm">Tutoriales de la Aplicación</span>
-              <ArrowRight className="w-5 h-5 text-slate-400 group-hover:text-slate-900 transition-colors" />
-            </a>
-          </div>
-        </section>
 
       </main>
     </div>

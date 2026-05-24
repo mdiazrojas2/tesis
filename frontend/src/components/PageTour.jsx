@@ -13,48 +13,53 @@ const TOUR_STEPS = {
   '/dashboard/admin/residentes': [
     { target: 'body', content: 'Bienvenido a la Gestión de Residentes. Aquí administras a las personas y sus cuentas.', placement: 'center', disableBeacon: true },
     { target: '.tour-step-tabs', content: 'Navega entre las vistas de Residentes, Cuentas de Usuario y el Estado por Unidades.' },
+    { target: '.tour-step-subtabs', content: 'En Cuentas de Usuario, puedes filtrar rápidamente por Cuentas Activas o ver los Residentes Pendientes (Sin Cuenta) para invitar.' },
     { target: '.tour-step-filters', content: 'Busca por nombre o RUT, y aplica filtros rápidos como "Adultos Mayores" o "Movilidad Reducida".' },
-    { target: '.tour-step-add', content: 'Utiliza este botón para registrar a un nuevo residente de forma manual.' },
-    { target: '.tour-step-table-actions', content: 'En cada fila encontrarás opciones para Ver Detalles, Editar la ficha, o Eliminar el registro.' },
+    { target: '.tour-step-add', content: 'Utiliza este botón para registrar a un nuevo residente o cuenta de usuario de forma manual.' },
+    { target: '.tour-step-vigencia', content: 'La columna Vigencia de Datos te avisa mediante colores (Verde, Amarillo, Rojo) si el residente tiene sus datos médicos actualizados o vencidos.' },
+    { target: '.tour-step-table-actions', content: 'En cada fila encontrarás opciones para Ver Detalles, Editar la ficha, Eliminar el registro, o Enviar Invitación al residente.' },
     { target: '.tour-step-exports', content: 'Genera reportes en PDF y Excel respetando los filtros que tengas aplicados.' },
-    { target: '.tour-step-massive', content: 'Descarga la plantilla Excel oficial, llénala, y súbela aquí para cargas masivas.' }
+    { target: '.tour-step-massive', content: 'Descarga la plantilla Excel oficial, llénala, y súbela aquí para cargas masivas evitando unidades repetidas.' }
   ],
   '/dashboard/admin/notificaciones': [
     { target: 'body', content: 'Aquí gestionas las notificaciones y correos que se envían a los residentes.', placement: 'center', disableBeacon: true },
     { target: '.tour-step-add', content: 'Haz clic aquí para redactar un nuevo mensaje y enviarlo a todo el condominio o a personas específicas.' },
     { target: '.tour-step-filters', content: 'Filtra el historial de notificaciones por fecha de envío, tipo (Correo, Aviso), o por unidad.' },
-    { target: '.tour-step-table', content: 'Esta tabla muestra el registro de todos los comunicados emitidos previamente.' }
+    { target: '.tour-step-table', content: 'Esta tabla muestra el registro de todos los comunicados emitidos previamente. Las notificaciones del sistema (como un residente eliminado) se generarán automáticamente.' }
   ],
   '/dashboard/admin/documentos': [
     { target: 'body', content: 'Biblioteca de documentos del condominio (Reglamentos, Actas, Planes de Emergencia).', placement: 'center', disableBeacon: true },
     { target: '.tour-step-add', content: 'Presiona aquí para subir un nuevo PDF o archivo que los residentes podrán visualizar.' },
-    { target: '.tour-step-table', content: 'Aquí puedes administrar los documentos, descargarlos para revisarlos o eliminarlos del sistema.' }
+    { target: '.tour-step-table', content: 'Aquí puedes administrar los documentos. El sistema notificará automáticamente a los residentes si subes o actualizas un Plan de Emergencia.' }
   ],
   '/dashboard/admin/configuracion': [
     { target: 'body', content: 'Configuración base de tu Condominio.', placement: 'center', disableBeacon: true },
-    { target: '.tour-step-form', content: 'Actualiza el nombre, dirección y correo de contacto de la administración.' },
-    { target: '.tour-step-unidades', content: 'Gestiona la estructura de tu condominio: puedes agregar, editar o eliminar unidades y torres.' },
+    { target: '.tour-step-form', content: 'Actualiza el nombre, dirección y correo de contacto de la administración. Los residentes usarán este correo para contactarte.' },
+    { target: '.tour-step-unidades', content: 'Gestiona la estructura de tu condominio: puedes agregar, editar o eliminar unidades. Si borras una unidad, se limpiarán todos los residentes en ella.' },
     { target: '.tour-step-save', content: '¡No olvides guardar los cambios antes de salir!' }
   ],
   '/dashboard/residente': [
-    { target: 'body', content: '¡Bienvenido a tu panel de Residente! Aquí tienes un resumen de tu actividad.', placement: 'center', disableBeacon: true },
+    { target: 'body', content: '¡Bienvenido a tu panel de Residente! Aquí tienes un resumen de tu actividad en el condominio.', placement: 'center', disableBeacon: true },
     { target: '.tour-step-sidebar', content: 'Desde este menú puedes acceder a tus documentos, a tu grupo familiar y pedir soporte.' },
-    { target: '.tour-step-notifications', content: 'Mantente al día con los últimos avisos enviados por la Administración.' },
-    { target: '.tour-step-quick-actions', content: 'Accesos rápidos para gestionar tu hogar o descargar documentos importantes.' }
+    { target: '.tour-step-vigencia-datos', content: 'Este panel te avisa si tus datos de salud y emergencia están vigentes. Por ley, debes confirmarlos cada 6 meses (180 días).' },
+    { target: '.tour-step-integrantes', content: 'Aquí puedes ver rápidamente cuántos integrantes componen tu grupo familiar.' },
+    { target: '.tour-step-notifications-filter', content: 'Puedes filtrar las notificaciones de tu unidad por fechas Desde y Hasta.' },
+    { target: '.tour-step-notifications', content: 'Mantente al día con los últimos avisos enviados por la Administración o por el sistema.' },
+    { target: '.tour-step-quick-actions', content: 'Accesos rápidos para descargar los documentos más importantes.' }
   ],
   '/dashboard/residente/hogar': [
     { target: 'body', content: 'Gestión de tu Grupo Familiar.', placement: 'center', disableBeacon: true },
     { target: '.tour-step-cards', content: 'Aquí verás las tarjetas con la información técnica y médica de quienes viven contigo.' },
-    { target: '.tour-step-add', content: 'Añade a un nuevo integrante, ya sea tu cónyuge, hijos o algún familiar.' }
+    { target: '.tour-step-add', content: 'Añade a un nuevo integrante, ya sea tu cónyuge, hijos o algún familiar sin necesidad de crearle una cuenta si no es necesario.' }
   ],
   '/dashboard/residente/documentos': [
     { target: 'body', content: 'Repositorio de Documentos.', placement: 'center', disableBeacon: true },
     { target: '.tour-step-filters', content: 'Busca el documento que necesitas ingresando palabras clave.' },
-    { target: '.tour-step-table', content: 'Visualiza o descarga actas, reglamentos de copropiedad y más archivos compartidos por administración.' }
+    { target: '.tour-step-table', content: 'Visualiza o descarga actas, reglamentos de copropiedad y planes de emergencia actualizados.' }
   ],
   '/dashboard/residente/soporte': [
     { target: 'body', content: 'Centro de Ayuda y Soporte.', placement: 'center', disableBeacon: true },
-    { target: '.tour-step-form', content: 'Llena este formulario para enviar dudas, sugerencias o reportar un problema directamente a la Administración.' }
+    { target: '.tour-step-form', content: 'Aquí puedes revisar respuestas a Preguntas Frecuentes, ver el correo directo de la administración o enviarles un mensaje desde el formulario.' }
   ]
 };
 
