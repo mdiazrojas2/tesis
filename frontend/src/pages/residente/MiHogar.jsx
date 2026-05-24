@@ -72,7 +72,7 @@ export default function MiHogar() {
           );
         })()}
 
-        <h2 className="text-xl font-bold text-slate-900 mb-6">Integrantes del Hogar</h2>
+        <h2 className="tour-step-cards text-xl font-bold text-slate-900 mb-6">Integrantes del Hogar</h2>
 
         {integrantes.length === 0 ? (
           <p className="text-slate-500 mb-6">No hay integrantes registrados.</p>
@@ -120,7 +120,7 @@ export default function MiHogar() {
 
         <button 
           onClick={() => navigate('/dashboard/residente/hogar/nuevo')}
-          className="bg-[#1A7FF2] hover:bg-blue-600 text-white font-medium py-3 px-6 rounded-lg transition-colors shadow-sm"
+          className="tour-step-add bg-[#1A7FF2] hover:bg-blue-600 text-white font-medium py-3 px-6 rounded-lg transition-colors shadow-sm"
         >
           Agregar integrante
         </button>

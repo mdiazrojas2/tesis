@@ -73,7 +73,7 @@ export default function AdminNotificaciones() {
             </div>
           </div>
 
-          <div className="flex flex-col md:flex-row gap-4 mb-6 bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+          <div className="tour-step-filters flex flex-col md:flex-row gap-4 mb-6 bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
             <div className="flex-1">
               <label className="block text-xs font-medium text-slate-500 mb-1">Filtrar por Fecha</label>
               <input 
@@ -119,7 +119,7 @@ export default function AdminNotificaciones() {
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+          <div className="tour-step-table bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
             {loading ? (
               <div className="p-8 text-center text-slate-500">Cargando notificaciones...</div>
             ) : filteredNotificaciones.length === 0 ? (

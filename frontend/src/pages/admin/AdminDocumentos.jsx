@@ -113,7 +113,7 @@ export default function AdminDocumentos() {
           <h1 className="text-3xl font-bold text-slate-900">Gestión Documental</h1>
           <button 
             onClick={() => navigate('/dashboard/admin/documentos/nuevo')}
-            className="px-6 py-2.5 bg-[#1A7FF2] hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-colors shadow-sm"
+            className="tour-step-add px-6 py-2.5 bg-[#1A7FF2] hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-colors shadow-sm"
           >
             Subir Nuevo Documento
           </button>
@@ -134,7 +134,7 @@ export default function AdminDocumentos() {
         </div>
 
         {/* Table */}
-        <div className="border border-slate-200 rounded-xl overflow-x-auto">
+        <div className="tour-step-table border border-slate-200 rounded-xl overflow-x-auto">
           <table className="w-full text-left text-sm">
             <thead>
               <tr className="border-b border-slate-200 text-slate-600">

@@ -1,12 +1,25 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Sidebar from '../../components/Sidebar';
 import { ChevronDown, ChevronUp, ArrowRight } from 'lucide-react';
 import useResidentUnit from '../../hooks/useResidentUnit';
+import axios from 'axios';
 
 export default function Soporte() {
   const [openFaq, setOpenFaq] = useState(0);
   const [mensaje, setMensaje] = useState('');
+  const [adminEmail, setAdminEmail] = useState('admin@condominio.cl');
+  const [isSending, setIsSending] = useState(false);
   const { unitInfo } = useResidentUnit();
+
+  useEffect(() => {
+    axios.get('http://localhost:8000/api/catastro/condominios/')
+      .then(res => {
+        if (res.data.length > 0 && res.data[0].email_administracion) {
+          setAdminEmail(res.data[0].email_administracion);
+        }
+      })
+      .catch(err => console.error(err));
+  }, []);
 
   const faqs = [
     {
@@ -23,13 +36,22 @@ export default function Soporte() {
     }
   ];
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (!mensaje.trim()) {
       alert("Por favor, escriba un mensaje antes de enviar.");
       return;
     }
-    alert("Mensaje enviado con éxito a la administración. Recibirá una respuesta a la brevedad.");
-    setMensaje('');
+    setIsSending(true);
+    try {
+      await axios.post('http://localhost:8000/api/catastro/residentes/enviar-soporte/', { mensaje });
+      alert("Mensaje enviado con éxito a la administración. Recibirá una respuesta a la brevedad.");
+      setMensaje('');
+    } catch (err) {
+      console.error(err);
+      alert("Ocurrió un error al enviar el mensaje. Inténtelo más tarde.");
+    } finally {
+      setIsSending(false);
+    }
   };
 
   return (
@@ -63,7 +85,7 @@ export default function Soporte() {
         </section>
 
         {/* Contactar a Administración */}
-        <section className="mb-12 max-w-3xl">
+        <section className="tour-step-form mb-12 max-w-3xl">
           <h2 className="text-xl font-bold text-slate-900 mb-6">Contactar a Administración</h2>
           <textarea 
             rows="6"
@@ -73,12 +95,13 @@ export default function Soporte() {
             className="w-full border border-slate-200 rounded-xl p-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 mb-4 resize-none"
           ></textarea>
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <p className="text-xs text-slate-500">O envía un correo electrónico a: admin@volcanes.cl</p>
+            <p className="text-xs text-slate-500">O envía un correo electrónico a: {adminEmail}</p>
             <button 
               onClick={handleSend}
-              className="bg-[#1A7FF2] hover:bg-blue-600 text-white font-medium py-2.5 px-6 rounded-lg transition-colors text-sm w-full md:w-auto"
+              disabled={isSending}
+              className={`text-white font-medium py-2.5 px-6 rounded-lg transition-colors text-sm w-full md:w-auto ${isSending ? 'bg-slate-400 cursor-not-allowed' : 'bg-[#1A7FF2] hover:bg-blue-600'}`}
             >
-              Enviar Mensaje
+              {isSending ? 'Enviando...' : 'Enviar Mensaje'}
             </button>
           </div>
         </section>

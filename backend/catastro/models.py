@@ -49,7 +49,6 @@ class Condominio(models.Model):
     notificar_actualizacion_planes = models.BooleanField(default=True)
     plantilla_vencimiento = models.TextField(blank=True, null=True)
     plantilla_planes = models.TextField(blank=True, null=True)
-    frecuencia_planes = models.CharField(max_length=50, choices=[('Anual', 'Anual'), ('Bianual', 'Bianual')], default='Anual')
     categorias_documentos = models.CharField(max_length=255, blank=True, null=True, help_text="Separadas por comas")
 
     def __str__(self):

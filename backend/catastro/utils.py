@@ -100,3 +100,38 @@ def check_vencimientos_sistema():
                     tipo="Alerta", estado="Pendiente"
                 )
                 send_email_async("Plan próximo a vencer", f"Faltan {dias_restantes} días para que venza el plan '{d.titulo}'.", get_all_resident_emails(d.condominio))
+
+import re
+
+def valida_rut_chileno(rut):
+    if not rut or type(rut) != str:
+        return False
+        
+    rut = rut.upper().replace("-", "").replace(".", "")
+    if len(rut) < 2:
+        return False
+        
+    aux = rut[:-1]
+    dv = rut[-1]
+
+    if not aux.isdigit():
+        return False
+        
+    revertido = map(int, reversed(str(aux)))
+    factors = [2, 3, 4, 5, 6, 7, 2, 3, 4, 5, 6, 7]
+    s = sum(d * f for d, f in zip(revertido, factors))
+    res = 11 - (s % 11)
+
+    if res == 11:
+        dv_esperado = '0'
+    elif res == 10:
+        dv_esperado = 'K'
+    else:
+        dv_esperado = str(res)
+
+    return dv == dv_esperado
+
+def valida_nombre(nombre):
+    if not nombre:
+        return False
+    return bool(re.match(r'^[A-Za-zÁ-Úá-úñÑ\s]+$', nombre))

@@ -9,6 +9,9 @@ export default function DashboardResidente() {
   const [notificaciones, setNotificaciones] = useState([]);
   const [documentos, setDocumentos] = useState([]);
   const { unitId, unitInfo, loading: unitLoading } = useResidentUnit();
+  const [residente, setResidente] = useState(null);
+  const [diasRestantes, setDiasRestantes] = useState(180);
+  const [isConfirming, setIsConfirming] = useState(false);
 
   useEffect(() => {
     if (unitLoading || !unitId) return;
@@ -26,7 +29,39 @@ export default function DashboardResidente() {
     api.get('catastro/documentos/')
       .then(r => setDocumentos(r.data.slice(0, 3)))
       .catch(err => console.error('Error fetching documentos:', err));
+
+    // Fetch resident data to calculate expiration
+    api.get('catastro/residentes/')
+      .then(r => {
+        if (r.data.length > 0) {
+          // Tomamos el primer residente (generalmente el jefe de hogar logueado)
+          const myRes = r.data[0];
+          setResidente(myRes);
+          if (myRes.fecha_ultima_actualizacion) {
+            const ultima = new Date(myRes.fecha_ultima_actualizacion);
+            const hoy = new Date();
+            const diasPasados = Math.floor((hoy - ultima) / (1000 * 60 * 60 * 24));
+            setDiasRestantes(180 - diasPasados);
+          }
+        }
+      })
+      .catch(err => console.error(err));
   }, [unitLoading, unitId]);
+
+  const handleConfirmData = async () => {
+    if (!residente) return;
+    setIsConfirming(true);
+    try {
+      await api.post(`catastro/residentes/${residente.id}/confirmar-datos/`);
+      setDiasRestantes(180);
+      alert('¡Gracias! Tus datos han sido confirmados por 6 meses más.');
+    } catch (err) {
+      console.error(err);
+      alert('Error al confirmar datos.');
+    } finally {
+      setIsConfirming(false);
+    }
+  };
 
   return (
     <div className="flex min-h-screen bg-slate-50 font-sans text-slate-900">
@@ -34,6 +69,30 @@ export default function DashboardResidente() {
       
       <main className="flex-1 p-8 md:p-12 lg:px-16 overflow-y-auto">
         <h1 className="text-3xl font-bold text-slate-900 mb-8">Bienvenido Residente</h1>
+
+        {residente && (
+          <section className="mb-8">
+            <div className={`p-5 rounded-xl border flex flex-col md:flex-row justify-between items-start md:items-center gap-4 ${diasRestantes <= 30 ? 'bg-rose-50 border-rose-200' : 'bg-blue-50 border-blue-200'}`}>
+              <div>
+                <h3 className={`font-bold ${diasRestantes <= 30 ? 'text-rose-900' : 'text-blue-900'}`}>
+                  Vigencia de Datos (Revisión Semestral)
+                </h3>
+                <p className={`text-sm mt-1 ${diasRestantes <= 30 ? 'text-rose-700' : 'text-blue-700'}`}>
+                  {diasRestantes > 0 
+                    ? `Tus datos de contacto y salud expiran en ${diasRestantes} días. Por normativa, debes confirmarlos.` 
+                    : 'Tus datos han expirado. Por favor, revísalos y confírmalos a la brevedad.'}
+                </p>
+              </div>
+              <button 
+                onClick={handleConfirmData}
+                disabled={isConfirming}
+                className={`shrink-0 px-5 py-2.5 rounded-lg text-sm font-medium text-white transition-colors shadow-sm ${diasRestantes <= 30 ? 'bg-rose-600 hover:bg-rose-700' : 'bg-blue-600 hover:bg-blue-700'} ${isConfirming ? 'opacity-50 cursor-not-allowed' : ''}`}
+              >
+                {isConfirming ? 'Confirmando...' : 'Mis datos siguen correctos'}
+              </button>
+            </div>
+          </section>
+        )}
 
         <section className="mb-12">
           <h2 className="text-lg font-bold text-slate-900 mb-4">Resumen de mi unidad</h2>
@@ -62,7 +121,7 @@ export default function DashboardResidente() {
           </div>
         </section>
 
-        <section className="mb-12">
+        <section className="tour-step-notifications mb-12">
           <h2 className="text-lg font-bold text-slate-900 mb-4">Notificaciones y Avisos</h2>
           {notificaciones.length === 0 ? (
             <p className="text-sm text-slate-500">No hay notificaciones por el momento.</p>
@@ -82,7 +141,7 @@ export default function DashboardResidente() {
         </section>
 
         <section>
-          <h2 className="text-lg font-bold text-slate-900 mb-4">Documentos Importantes</h2>
+          <h2 className="tour-step-quick-actions text-lg font-bold text-slate-900 mb-4">Documentos Importantes</h2>
           {documentos.length === 0 ? (
             <p className="text-sm text-slate-500">No hay documentos disponibles.</p>
           ) : (

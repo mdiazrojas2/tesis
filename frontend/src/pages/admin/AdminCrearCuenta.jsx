@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Building2 } from 'lucide-react';
 import axios from 'axios';
+import { validateName } from '../../utils/rutValidation';
 
 export default function AdminCrearCuenta() {
   const navigate = useNavigate();
@@ -15,6 +16,9 @@ export default function AdminCrearCuenta() {
     recibir_notificaciones: true
   });
 
+  const [errors, setErrors] = useState({});
+  const [crearCuenta, setCrearCuenta] = useState(true);
+
   useEffect(() => {
     axios.get('http://localhost:8000/api/catastro/unidades/')
       .then(res => setUnidades(res.data))
@@ -22,22 +26,48 @@ export default function AdminCrearCuenta() {
   }, []);
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    
+    if (name === 'nombre' || name === 'apellidos') {
+      if (value.length > 0 && !validateName(value)) {
+        setErrors(prev => ({ ...prev, [name]: 'No debe contener números ni caracteres especiales' }));
+      } else {
+        setErrors(prev => ({ ...prev, [name]: '' }));
+      }
+    }
+    
+    setFormData({ ...formData, [name]: value });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    if (Object.values(errors).some(err => err !== '')) {
+      alert("Por favor, corrija los errores antes de guardar.");
+      return;
+    }
+    
     if (!formData.nombre || !formData.unidad) {
       alert("Por favor complete los campos obligatorios.");
       return;
     }
     try {
-      await axios.post('http://localhost:8000/api/catastro/residentes/', formData);
-      alert('Cuenta y Ficha de Residente creada exitosamente.');
+      const response = await axios.post('http://localhost:8000/api/catastro/residentes/', formData);
+      if (crearCuenta && formData.correo) {
+        try {
+          await axios.post(`http://localhost:8000/api/catastro/residentes/${response.data.id}/enviar-invitacion/`);
+          alert('Ficha creada y cuenta de usuario generada (se envió la invitación por correo).');
+        } catch (invErr) {
+          console.error(invErr);
+          alert('Ficha creada, pero ocurrió un error al generar la cuenta de usuario.');
+        }
+      } else {
+        alert('Ficha de Residente creada exitosamente (sin cuenta de acceso).');
+      }
       navigate('/dashboard/admin/residentes');
     } catch (error) {
       console.error(error);
-      alert('Error al crear la cuenta. Intente nuevamente.');
+      alert('Error al crear la ficha. Intente nuevamente.');
     }
   };
 
@@ -67,8 +97,9 @@ export default function AdminCrearCuenta() {
                   onChange={handleChange}
                   required
                   placeholder="Ej: Sofía" 
-                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50" 
+                  className={`w-full bg-slate-50 border ${errors.nombre ? 'border-red-500' : 'border-slate-200'} rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 ${errors.nombre ? 'focus:ring-red-500/50' : 'focus:ring-blue-500/50'}`} 
                 />
+                {errors.nombre && <p className="text-red-500 text-xs mt-1">{errors.nombre}</p>}
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-900 mb-2">Apellidos</label>
@@ -78,8 +109,9 @@ export default function AdminCrearCuenta() {
                   value={formData.apellidos}
                   onChange={handleChange}
                   placeholder="Ej: Rodríguez" 
-                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50" 
+                  className={`w-full bg-slate-50 border ${errors.apellidos ? 'border-red-500' : 'border-slate-200'} rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 ${errors.apellidos ? 'focus:ring-red-500/50' : 'focus:ring-blue-500/50'}`} 
                 />
+                {errors.apellidos && <p className="text-red-500 text-xs mt-1">{errors.apellidos}</p>}
               </div>
             </div>
 
@@ -128,6 +160,24 @@ export default function AdminCrearCuenta() {
                 <option value="FAMILIAR_ADULTO_MAYOR">Familiar adulto mayor</option>
                 <option value="OTRO">Otro</option>
               </select>
+            </div>
+
+            <div className="flex items-start gap-3 p-4 bg-slate-50 border border-slate-200 rounded-lg">
+              <input 
+                type="checkbox" 
+                id="crear_cuenta"
+                checked={crearCuenta}
+                onChange={(e) => setCrearCuenta(e.target.checked)}
+                className="mt-1 w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500"
+              />
+              <div>
+                <label htmlFor="crear_cuenta" className="text-sm font-medium text-slate-900 block">
+                  Crear cuenta de acceso para este residente
+                </label>
+                <p className="text-xs text-slate-500 mt-1">
+                  Si marcas esta opción y el residente tiene correo electrónico, se le enviará una invitación para que genere su contraseña. Desmárcalo para menores de edad o residentes que no usarán el portal.
+                </p>
+              </div>
             </div>
 
             <div className="flex justify-end gap-4 pt-4">

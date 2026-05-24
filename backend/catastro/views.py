@@ -5,9 +5,12 @@ from rest_framework import status
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
+from django.contrib.auth import authenticate, login
+from rest_framework_simplejwt.tokens import RefreshToken
+from openpyxl.worksheet.datavalidation import DataValidation
+from .utils import valida_rut_chileno, valida_nombre, send_email_async
 from django.contrib.auth import get_user_model
 from django.urls import reverse
-from .utils import send_email_async
 from .models import Condominio, Unidad, Residente, Documento, Notificacion
 from .serializers import CondominioSerializer, UnidadSerializer, ResidenteSerializer, DocumentoSerializer, NotificacionSerializer
 
@@ -162,6 +165,35 @@ class ResidenteViewSet(viewsets.ModelViewSet):
         except User.DoesNotExist:
             return Response({'detail': 'No se encontró una cuenta de usuario para este residente.'}, status=status.HTTP_404_NOT_FOUND)
 
+    @action(detail=False, methods=['post'], url_path='enviar-soporte')
+    def enviar_soporte(self, request):
+        """Envía un correo de soporte al administrador del condominio."""
+        mensaje = request.data.get('mensaje')
+        if not mensaje:
+            return Response({'detail': 'El mensaje no puede estar vacío.'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        user = request.user
+        residente = Residente.objects.filter(correo=user.email).first()
+        nombre_remitente = f"{residente.nombre} {residente.apellidos or ''}".strip() if residente else user.email
+        correo_remitente = user.email
+
+        condominio = Condominio.objects.first()
+        if not condominio or not condominio.email_administracion:
+            return Response({'detail': 'No hay un correo de administración configurado.'}, status=status.HTTP_400_BAD_REQUEST)
+            
+        subject = f"Nuevo mensaje de soporte - {nombre_remitente}"
+        cuerpo = f"Has recibido un nuevo mensaje de soporte desde la plataforma.\n\nRemitente: {nombre_remitente}\nCorreo: {correo_remitente}\n\nMensaje:\n{mensaje}"
+        
+        send_email_async(subject=subject, message=cuerpo, recipient_list=[condominio.email_administracion])
+        return Response({'detail': 'Mensaje enviado correctamente.'}, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['post'], url_path='confirmar-datos')
+    def confirmar_datos(self, request, pk=None):
+        """Confirma que los datos del residente están actualizados (reinicia contador semestral)."""
+        residente = self.get_object()
+        residente.save()
+        return Response({'detail': 'Datos confirmados correctamente.'}, status=status.HTTP_200_OK)
+
     @action(detail=False, methods=['post'], url_path='carga-masiva')
     def carga_masiva(self, request):
         """Carga masiva de residentes desde archivo Excel."""
@@ -205,8 +237,22 @@ class ResidenteViewSet(viewsets.ModelViewSet):
             nombres = data.get('nombres', '')
             numero_depto = data.get('numero_depto', '')
             
-            if not nombres or not numero_depto:
+            if no_nombres or not numero_depto:
                 errores.append(f'Fila {row_idx}: nombres y numero_depto son obligatorios.')
+                continue
+                
+            if not valida_nombre(nombres):
+                errores.append(f'Fila {row_idx}: Nombres no pueden contener números o caracteres especiales.')
+                continue
+                
+            apellidos = data.get('apellidos', '')
+            if apellidos and not valida_nombre(apellidos):
+                errores.append(f'Fila {row_idx}: Apellidos no pueden contener números o caracteres especiales.')
+                continue
+                
+            rut_dni = data.get('rut_dni', '')
+            if rut_dni and not valida_rut_chileno(rut_dni):
+                errores.append(f'Fila {row_idx}: RUT {rut_dni} no es válido.')
                 continue
                 
             relacion = data.get('relacion_hogar', 'JEFE_HOGAR').upper()

@@ -88,8 +88,8 @@ export default function AdminResidentes() {
     if (window.confirm(`¿Está seguro de que desea eliminar la cuenta de usuario de ${nombre}? El residente ya no podrá iniciar sesión, pero su ficha seguirá registrada en el sistema.`)) {
       try {
         await axios.delete(`http://localhost:8000/api/catastro/residentes/${id}/eliminar-cuenta/`);
+        setResidentes(prev => prev.map(r => r.id === id ? { ...r, tiene_cuenta: false } : r));
         alert('Cuenta de usuario eliminada con éxito.');
-        // Optionally fetch data again to update any "cuenta activa" status if we were showing it
       } catch (err) {
         console.error(err);
         alert(err.response?.data?.detail || 'Error al eliminar la cuenta de usuario.');
@@ -164,14 +164,25 @@ export default function AdminResidentes() {
       const u = unidades.find(un => un.id === r.unidad);
       return {
         'Unidad': getUnitString(u),
-        'Nombre Completo': `${r.nombre} ${r.apellidos || ''}`,
+        'Nombre Completo': `${r.nombre} ${r.apellidos || ''}`.trim(),
         'RUT/DNI': r.rut_dni || 'N/A',
         'Correo': r.correo || 'N/A',
         'Teléfono': r.telefono || 'N/A',
+        'Nacionalidad': r.nacionalidad || 'N/A',
+        'Idioma Principal': r.idioma_principal || 'N/A',
+        'Fecha de Nacimiento': r.fecha_nacimiento || 'N/A',
         'Edad': calculateAge(r.fecha_nacimiento) || 'N/A',
         'Relación': RELACION_MAP[r.relacion_jefe_hogar] || r.relacion_jefe_hogar || 'N/A',
         'Movilidad Reducida': r.movilidad_reducida ? 'Sí' : 'No',
-        'Problemas Médicos': r.condicion_medica ? 'Sí' : 'No'
+        'Condición Médica': r.condicion_medica ? 'Sí' : 'No',
+        'Requiere Asistencia en Emergencia': r.requiere_asistencia_emergencia ? 'Sí' : 'No',
+        'Observaciones de Salud': r.detalles_salud_sensibles || 'N/A',
+        'Contacto Emergencia - Nombre': r.contacto_emergencia_nombre || 'N/A',
+        'Contacto Emergencia - Parentesco': r.contacto_emergencia_parentesco || 'N/A',
+        'Contacto Emergencia - Teléfono': r.contacto_emergencia_telefono || 'N/A',
+        'Contacto Emergencia - Correo': r.contacto_emergencia_correo || 'N/A',
+        'Recibe Notificaciones': r.recibir_notificaciones ? 'Sí' : 'No',
+        'Última Actualización': r.fecha_ultima_actualizacion ? new Date(r.fecha_ultima_actualizacion).toLocaleString('es-CL') : 'N/A'
       };
     });
 
@@ -304,7 +315,7 @@ export default function AdminResidentes() {
           {activeTab === 'residentes' && (
             <button 
               onClick={() => navigate('/dashboard/admin/cuentas/nueva')}
-              className="px-6 py-2.5 bg-[#1A7FF2] hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-colors shadow-sm"
+              className="tour-step-add px-6 py-2.5 bg-[#1A7FF2] hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-colors shadow-sm"
             >
               Registrar Nuevo Residente
             </button>
@@ -493,7 +504,7 @@ export default function AdminResidentes() {
                                 </span>
                               </div>
                             </td>
-                            <td className="p-4 text-blue-600 font-medium leading-relaxed max-w-[200px]">
+                            <td className="tour-step-table-actions p-4 text-blue-600 font-medium leading-relaxed max-w-[200px]">
                               <span 
                                 onClick={() => navigate('/dashboard/residente/hogar/detalles', { state: { integrante: row } })}
                                 className="cursor-pointer hover:underline"
@@ -518,7 +529,20 @@ export default function AdminResidentes() {
                           </>
                         ) : (
                           <>
-                            <td className="p-4 text-slate-500 text-blue-600">{row.correo || 'sin-correo@condo.cl'}</td>
+                            <td className="p-4 text-slate-500">
+                              <div className="flex items-center gap-2">
+                                <span className="text-blue-600">{row.correo || 'sin-correo@condo.cl'}</span>
+                                {row.tiene_cuenta ? (
+                                  <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-emerald-100 text-emerald-800">
+                                    Cuenta Activa
+                                  </span>
+                                ) : (
+                                  <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-slate-100 text-slate-600">
+                                    Sin Cuenta
+                                  </span>
+                                )}
+                              </div>
+                            </td>
                             <td className="p-4">
                               <div className="flex justify-center">
                                 <span className={`inline-flex px-4 py-1.5 rounded-lg text-xs font-medium ${isUpdated ? 'bg-slate-100 text-slate-950 font-semibold' : 'bg-slate-100 text-slate-500'}`}>
@@ -527,33 +551,37 @@ export default function AdminResidentes() {
                               </div>
                             </td>
                             <td className="p-4 text-blue-600 font-medium leading-relaxed max-w-[300px] text-xs">
-                              <span 
-                                onClick={() => navigate('/dashboard/admin/cuentas/enviar-invitacion', { state: { residente: row } })} 
-                                className="cursor-pointer hover:underline"
-                              >
-                                Enviar Invitación
-                              </span>
-                              {' | '}
-                              <span 
-                                onClick={() => handleRestablecerClave(row.id, row.nombre)} 
-                                className="cursor-pointer hover:underline"
-                              >
-                                Restablecer Contraseña
-                              </span>
-                              {' | '}
-                              <span 
-                                onClick={() => navigate('/dashboard/admin/cuentas/editar', { state: { residente: row } })} 
-                                className="cursor-pointer hover:underline"
-                              >
-                                Editar Cuenta
-                              </span>
-                              {' | '}
-                              <span 
-                                onClick={() => handleDeleteCuenta(row.id, row.nombre)}
-                                className="cursor-pointer hover:underline text-red-500"
-                              >
-                                Eliminar Cuenta
-                              </span>
+                              {!row.tiene_cuenta ? (
+                                <span 
+                                  onClick={() => navigate('/dashboard/admin/cuentas/enviar-invitacion', { state: { residente: row } })} 
+                                  className="cursor-pointer hover:underline"
+                                >
+                                  Enviar Invitación
+                                </span>
+                              ) : (
+                                <>
+                                  <span 
+                                    onClick={() => handleRestablecerClave(row.id, row.nombre)} 
+                                    className="cursor-pointer hover:underline"
+                                  >
+                                    Restablecer Contraseña
+                                  </span>
+                                  {' | '}
+                                  <span 
+                                    onClick={() => navigate('/dashboard/admin/cuentas/editar', { state: { residente: row } })} 
+                                    className="cursor-pointer hover:underline"
+                                  >
+                                    Editar Cuenta
+                                  </span>
+                                  {' | '}
+                                  <span 
+                                    onClick={() => handleDeleteCuenta(row.id, row.nombre)}
+                                    className="cursor-pointer hover:underline text-red-500"
+                                  >
+                                    Eliminar Cuenta
+                                  </span>
+                                </>
+                              )}
                             </td>
                           </>
                         )}

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import Sidebar from '../../components/Sidebar';
 import axios from 'axios';
+import { validateRUT, formatRUT, validateName } from '../../utils/rutValidation';
 
 export default function FormularioIntegrante() {
   const navigate = useNavigate();
@@ -31,6 +32,7 @@ export default function FormularioIntegrante() {
   };
 
   const [formData, setFormData] = useState(initialData);
+  const [errors, setErrors] = useState({});
 
   useEffect(() => {
     // Fetch units for selection
@@ -40,7 +42,21 @@ export default function FormularioIntegrante() {
   }, []);
 
   const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
+    let { name, value, type, checked } = e.target;
+    
+    if (name === 'rut_dni') {
+      value = formatRUT(value);
+      setErrors(prev => ({ ...prev, rut_dni: validateRUT(value) ? '' : 'RUT inválido' }));
+    }
+    
+    if (name === 'nombre' || name === 'apellidos') {
+      if (value.length > 0 && !validateName(value)) {
+        setErrors(prev => ({ ...prev, [name]: 'No debe contener números ni caracteres especiales' }));
+      } else {
+        setErrors(prev => ({ ...prev, [name]: '' }));
+      }
+    }
+
     setFormData(prev => ({
       ...prev,
       [name]: type === 'checkbox' ? checked : value
@@ -49,6 +65,14 @@ export default function FormularioIntegrante() {
 
   const handleSave = async (e) => {
     e.preventDefault();
+    
+    // Check if there are any validation errors before submitting
+    const hasErrors = Object.values(errors).some(err => err !== '');
+    if (hasErrors) {
+      alert('Por favor, corrija los errores en el formulario antes de guardar.');
+      return;
+    }
+    
     try {
       if (formData.id) {
         await axios.put(`http://localhost:8000/api/catastro/residentes/${formData.id}/`, formData);
@@ -91,15 +115,18 @@ export default function FormularioIntegrante() {
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Nombres</label>
-              <input type="text" name="nombre" value={formData.nombre} onChange={handleChange} required placeholder="Ingrese el nombre" className="w-full border border-slate-200 bg-slate-50 rounded-lg px-4 py-2.5 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/50" />
+              <input type="text" name="nombre" value={formData.nombre} onChange={handleChange} required placeholder="Ingrese el nombre" className={`w-full border ${errors.nombre ? 'border-red-500' : 'border-slate-200'} bg-slate-50 rounded-lg px-4 py-2.5 text-sm focus:bg-white focus:outline-none focus:ring-2 ${errors.nombre ? 'focus:ring-red-500/50' : 'focus:ring-blue-500/50'}`} />
+              {errors.nombre && <p className="text-red-500 text-xs mt-1">{errors.nombre}</p>}
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Apellidos</label>
-              <input type="text" name="apellidos" value={formData.apellidos} onChange={handleChange} placeholder="Ingrese el apellido" className="w-full border border-slate-200 bg-slate-50 rounded-lg px-4 py-2.5 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/50" />
+              <input type="text" name="apellidos" value={formData.apellidos} onChange={handleChange} placeholder="Ingrese el apellido" className={`w-full border ${errors.apellidos ? 'border-red-500' : 'border-slate-200'} bg-slate-50 rounded-lg px-4 py-2.5 text-sm focus:bg-white focus:outline-none focus:ring-2 ${errors.apellidos ? 'focus:ring-red-500/50' : 'focus:ring-blue-500/50'}`} />
+              {errors.apellidos && <p className="text-red-500 text-xs mt-1">{errors.apellidos}</p>}
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">RUT/DNI</label>
-              <input type="text" name="rut_dni" value={formData.rut_dni} onChange={handleChange} placeholder="Ingrese el RUT/DNI" className="w-full border border-slate-200 bg-slate-50 rounded-lg px-4 py-2.5 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/50" />
+              <input type="text" name="rut_dni" value={formData.rut_dni} onChange={handleChange} placeholder="Ingrese el RUT (Ej: 12.345.678-9)" className={`w-full border ${errors.rut_dni ? 'border-red-500' : 'border-slate-200'} bg-slate-50 rounded-lg px-4 py-2.5 text-sm focus:bg-white focus:outline-none focus:ring-2 ${errors.rut_dni ? 'focus:ring-red-500/50' : 'focus:ring-blue-500/50'}`} />
+              {errors.rut_dni && <p className="text-red-500 text-xs mt-1">{errors.rut_dni}</p>}
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Fecha de Nacimiento</label>

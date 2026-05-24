@@ -166,7 +166,7 @@ export default function AdminConfiguracion() {
             <div className="space-y-8">
               
               {/* Opciones Generales */}
-              <div className="bg-white rounded-xl border border-slate-200 overflow-hidden mb-8">
+              <div className="tour-step-form bg-white rounded-xl border border-slate-200 overflow-hidden mb-8">
                 <div className="p-6 border-b border-slate-100 bg-slate-50/50">
                   <h3 className="font-bold text-slate-900">Configuración del Condominio</h3>
                   <p className="text-sm text-slate-500">Ajustes básicos del sistema</p>
@@ -227,30 +227,11 @@ export default function AdminConfiguracion() {
                 </div>
               </div>
 
-              {/* Frecuencia de Planes */}
-              <div className="bg-white rounded-xl border border-slate-200 overflow-hidden mb-8">
-                <div className="p-6 border-b border-slate-100 bg-slate-50/50">
-                  <h3 className="font-bold text-slate-900">Frecuencia de Planes de Emergencia</h3>
-                  <p className="text-sm text-slate-500">¿Con qué frecuencia expiran los planes actuales?</p>
-                </div>
-                <div className="p-6">
-                  <div className="flex gap-6">
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input type="radio" name="frecuencia_planes" value="Anual" checked={formData.frecuencia_planes === 'Anual'} onChange={handleChange} className="w-4 h-4 text-blue-600 border-slate-300 focus:ring-blue-500" />
-                      <span className="text-sm font-medium text-slate-700">Anual</span>
-                    </label>
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input type="radio" name="frecuencia_planes" value="Bianual" checked={formData.frecuencia_planes === 'Bianual'} onChange={handleChange} className="w-4 h-4 text-blue-600 border-slate-300 focus:ring-blue-500" />
-                      <span className="text-sm font-medium text-slate-700">Bianual (Cada 2 años)</span>
-                    </label>
-                  </div>
-                </div>
-              </div>
             </div>
           )}
 
           {activeTab === 'unidades' && (
-            <div className="space-y-6 bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+            <div className="tour-step-unidades space-y-6 bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
               <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                 <div>
                   <h3 className="font-bold text-slate-900 text-lg">Catastro de Unidades</h3>
@@ -392,7 +373,7 @@ export default function AdminConfiguracion() {
               <button 
                 onClick={handleSave}
                 disabled={isSaving}
-                className={`px-6 py-2.5 font-bold rounded-lg transition-colors text-sm shadow-sm flex items-center gap-2 ${isSaving ? 'bg-blue-300 text-white cursor-not-allowed' : 'bg-[#1A7FF2] hover:bg-blue-600 text-white'}`}
+                className={`tour-step-save px-6 py-2.5 font-bold rounded-lg transition-colors text-sm shadow-sm flex items-center gap-2 ${isSaving ? 'bg-blue-300 text-white cursor-not-allowed' : 'bg-[#1A7FF2] hover:bg-blue-600 text-white'}`}
               >
                 <Save className="w-4 h-4" />
                 {isSaving ? 'Guardando...' : 'Guardar Configuración'}

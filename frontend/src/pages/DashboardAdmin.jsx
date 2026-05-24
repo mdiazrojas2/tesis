@@ -135,7 +135,7 @@ export default function DashboardAdmin() {
         <section className="mb-12">
           <h2 className="text-lg font-bold text-slate-900 mb-4">Estadísticas Generales</h2>
           
-          <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
+          <div className="tour-step-stats-filters flex gap-2 mb-6 overflow-x-auto pb-2">
             {['Semanal', 'Mensual', 'Anual'].map(filter => {
               const isActive = activeFilter === filter;
               return (
