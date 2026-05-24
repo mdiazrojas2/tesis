@@ -138,15 +138,29 @@ class ResidenteViewSet(viewsets.ModelViewSet):
         try:
             user = User.objects.get(email=residente.correo)
         except User.DoesNotExist:
-            return Response({'detail': 'No hay cuenta de usuario asociada a este correo.'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'detail': 'No se encontró una cuenta para este correo.'}, status=status.HTTP_404_NOT_FOUND)
         token_generator = PasswordResetTokenGenerator()
         token = token_generator.make_token(user)
         uid = urlsafe_base64_encode(force_bytes(user.pk))
         link = f"http://localhost:5173/establecer-clave/{uid}/{token}"
-        subject = "Restablecimiento de contraseña - CondoConnect"
-        message = f"Hola {residente.nombre},\n\nEl administrador ha solicitado restablecer tu contraseña.\nHaz clic en el siguiente enlace para crear una nueva contraseña:\n{link}\n\nSi no esperabas esto, contacta al administrador."
+        subject = "Restablecer contraseña - CondoConnect"
+        message = f"Hola,\n\nHaz clic en el siguiente enlace para restablecer tu contraseña:\n{link}\n\nSi no solicitaste esto, ignora el mensaje."
         send_email_async(subject=subject, message=message, recipient_list=[residente.correo])
-        return Response({'detail': 'Correo de restablecimiento enviado correctamente.'}, status=status.HTTP_200_OK)
+        return Response({'detail': 'Correo de restablecimiento enviado.'}, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['delete'], url_path='eliminar-cuenta')
+    def eliminar_cuenta(self, request, pk=None):
+        """Elimina la cuenta de usuario (CustomUser) asociada al residente, sin borrar la ficha de residente."""
+        residente = self.get_object()
+        if not residente.correo:
+            return Response({'detail': 'El residente no tiene correo registrado.'}, status=status.HTTP_400_BAD_REQUEST)
+        User = get_user_model()
+        try:
+            user = User.objects.get(email=residente.correo)
+            user.delete()
+            return Response({'detail': 'Cuenta de usuario eliminada correctamente.'}, status=status.HTTP_200_OK)
+        except User.DoesNotExist:
+            return Response({'detail': 'No se encontró una cuenta de usuario para este residente.'}, status=status.HTTP_404_NOT_FOUND)
 
     @action(detail=False, methods=['post'], url_path='carga-masiva')
     def carga_masiva(self, request):
@@ -164,7 +178,7 @@ class ResidenteViewSet(viewsets.ModelViewSet):
         
         # Leer encabezados
         headers = [cell.value.strip().lower() if cell.value else '' for cell in ws[1]]
-        required = ['torre', 'numero_depto', 'nombre', 'correo']
+        required = ['numero_depto', 'nombres']
         for col in required:
             if col not in headers:
                 return Response({'detail': f'Falta la columna requerida: {col}'}, status=status.HTTP_400_BAD_REQUEST)
@@ -179,51 +193,95 @@ class ResidenteViewSet(viewsets.ModelViewSet):
         if not condominio:
             return Response({'detail': 'No hay condominio configurado.'}, status=status.HTTP_400_BAD_REQUEST)
         
+        VALID_RELACIONES = ['JEFE_HOGAR', 'CONYUGE', 'ARRENDATARIO', 'FAMILIAR_MENOR', 'FAMILIAR_ADULTO', 'FAMILIAR_MAYOR', 'OTRO']
+
         for row_idx, row in enumerate(ws.iter_rows(min_row=2, values_only=True), start=2):
-            data = dict(zip(headers, [str(v).strip() if v else '' for v in row]))
-            
-            if not data.get('nombre') or not data.get('numero_depto'):
-                errores.append(f'Fila {row_idx}: nombre y numero_depto son obligatorios')
+            # Check if row is completely empty
+            if all(v is None or str(v).strip() == '' for v in row):
                 continue
+                
+            data = dict(zip(headers, [str(v).strip() if v is not None else '' for v in row]))
+            
+            nombres = data.get('nombres', '')
+            numero_depto = data.get('numero_depto', '')
+            
+            if not nombres or not numero_depto:
+                errores.append(f'Fila {row_idx}: nombres y numero_depto son obligatorios.')
+                continue
+                
+            relacion = data.get('relacion_hogar', 'JEFE_HOGAR').upper()
+            if relacion and relacion not in VALID_RELACIONES:
+                errores.append(f"Fila {row_idx}: Relación '{relacion}' no es válida.")
+                continue
+                
+            movilidad = data.get('movilidad_reducida', '').lower() == 'sí' or data.get('movilidad_reducida', '').lower() == 'si'
+            medica = data.get('condicion_medica', '').lower() == 'sí' or data.get('condicion_medica', '').lower() == 'si'
+            
+            # Format fecha_nacimiento
+            fecha_nacimiento = data.get('fecha_nacimiento')
+            if fecha_nacimiento:
+                try:
+                    # In case it's a datetime object string representation or yyyy-mm-dd
+                    if ' ' in fecha_nacimiento:
+                        fecha_nacimiento = fecha_nacimiento.split(' ')[0]
+                except Exception:
+                    fecha_nacimiento = None
+            else:
+                fecha_nacimiento = None
             
             try:
                 # Buscar o crear unidad
                 unidad, _ = Unidad.objects.get_or_create(
                     condominio=condominio,
                     torre=data.get('torre', ''),
-                    numero_depto=data['numero_depto']
+                    numero_depto=numero_depto
                 )
+                
+                correo = data.get('correo', '')
+                if correo:
+                    correo = correo.lower()
                 
                 # Crear residente
                 residente = Residente.objects.create(
                     unidad=unidad,
-                    nombre=data['nombre'],
+                    nombre=nombres,
                     apellidos=data.get('apellidos', ''),
-                    correo=data.get('correo', '') or None,
-                    relacion_jefe_hogar=data.get('relacion_jefe_hogar', 'JEFE_HOGAR') or 'JEFE_HOGAR'
+                    rut_dni=data.get('rut_dni', ''),
+                    fecha_nacimiento=fecha_nacimiento or None,
+                    nacionalidad=data.get('nacionalidad', ''),
+                    idioma_principal=data.get('idioma', ''),
+                    correo=correo or None,
+                    telefono=data.get('telefono', ''),
+                    movilidad_reducida=movilidad,
+                    condicion_medica=medica,
+                    relacion_jefe_hogar=relacion or 'JEFE_HOGAR',
+                    contacto_emergencia_nombre=data.get('contacto_emergencia_nombre', ''),
+                    contacto_emergencia_telefono=data.get('contacto_emergencia_telefono', ''),
+                    contacto_emergencia_correo=data.get('contacto_emergencia_correo', '') or None
                 )
                 creados += 1
                 
                 # Crear usuario y enviar invitación si tiene correo
-                if data.get('correo'):
+                if correo:
                     user, created = User.objects.get_or_create(
-                        username=data['correo'],
+                        username=correo,
                         defaults={
-                            'email': data['correo'],
+                            'email': correo,
                             'rol': User.Roles.RESIDENTE,
                             'is_active': True,
                         }
                     )
-                    token = token_generator.make_token(user)
-                    uid = urlsafe_base64_encode(force_bytes(user.pk))
-                    link = f"http://localhost:5173/establecer-clave/{uid}/{token}"
-                    subject = "Invitación de acceso a CondoConnect"
-                    message = f"Hola {data['nombre']},\n\nSe ha creado una cuenta para ti en el portal de Condominio Volcanes.\nHaz clic en el siguiente enlace para establecer tu contraseña:\n{link}\n\nSi no solicitaste esto, ignora el mensaje."
-                    send_email_async(subject=subject, message=message, recipient_list=[data['correo']])
-                    invitaciones += 1
+                    if created:
+                        token = token_generator.make_token(user)
+                        uid = urlsafe_base64_encode(force_bytes(user.pk))
+                        link = f"http://localhost:5173/establecer-clave/{uid}/{token}"
+                        subject = "Invitación de acceso a CondoConnect"
+                        message = f"Hola {nombres},\n\nSe ha creado una cuenta para ti en el portal.\nHaz clic en el siguiente enlace para establecer tu contraseña:\n{link}\n\nSi no solicitaste esto, ignora el mensaje."
+                        send_email_async(subject=subject, message=message, recipient_list=[correo])
+                        invitaciones += 1
                     
             except Exception as e:
-                errores.append(f'Fila {row_idx}: {str(e)}')
+                errores.append(f'Fila {row_idx}: Error interno al procesar ({str(e)})')
         
         return Response({
             'detail': f'Carga completada. {creados} residentes creados, {invitaciones} invitaciones enviadas.',

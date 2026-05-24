@@ -3,6 +3,9 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import Sidebar from '../../components/Sidebar';
 import { Search } from 'lucide-react';
 import axios from 'axios';
+import * as XLSX from 'xlsx';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 const RELACION_MAP = {
   'JEFE_HOGAR': 'Jefe de Hogar',
@@ -21,6 +24,8 @@ export default function AdminResidentes() {
   const [residentes, setResidentes] = useState([]);
   const [unidades, setUnidades] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [reportData, setReportData] = useState(null);
+  const [isExportingPDF, setIsExportingPDF] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState('todos'); // 'todos', 'movilidad', 'medico', 'mayor', 'menor', 'incompleto', 'completo', 'sin_residentes'
 
@@ -32,6 +37,9 @@ export default function AdminResidentes() {
     }
     if (location.state?.filterType) {
       setFilterType(location.state.filterType);
+    }
+    if (location.state?.searchQuery) {
+      setSearchQuery(location.state.searchQuery);
     }
   }, [location.state]);
 
@@ -58,13 +66,13 @@ export default function AdminResidentes() {
   // Reset filters when switching tabs only if it's a direct user click or state change without specific filter
   useEffect(() => {
     // Only reset if we are not being forced by router state
-    if (location.state?.filterType) return;
+    if (location.state?.filterType || location.state?.searchQuery) return;
     setFilterType('todos');
     setSearchQuery('');
   }, [activeTab, location.state]);
 
   const handleDeleteResidente = async (id, nombre) => {
-    if (window.confirm(`¿Está seguro de que desea eliminar a ${nombre}?`)) {
+    if (window.confirm(`¿Está seguro de que desea eliminar al residente ${nombre}? Esto borrará su ficha completa del sistema.`)) {
       try {
         await axios.delete(`http://localhost:8000/api/catastro/residentes/${id}/`);
         setResidentes(prev => prev.filter(r => r.id !== id));
@@ -72,6 +80,19 @@ export default function AdminResidentes() {
       } catch (err) {
         console.error(err);
         alert('Error al eliminar el residente.');
+      }
+    }
+  };
+
+  const handleDeleteCuenta = async (id, nombre) => {
+    if (window.confirm(`¿Está seguro de que desea eliminar la cuenta de usuario de ${nombre}? El residente ya no podrá iniciar sesión, pero su ficha seguirá registrada en el sistema.`)) {
+      try {
+        await axios.delete(`http://localhost:8000/api/catastro/residentes/${id}/eliminar-cuenta/`);
+        alert('Cuenta de usuario eliminada con éxito.');
+        // Optionally fetch data again to update any "cuenta activa" status if we were showing it
+      } catch (err) {
+        console.error(err);
+        alert(err.response?.data?.detail || 'Error al eliminar la cuenta de usuario.');
       }
     }
   };
@@ -100,11 +121,23 @@ export default function AdminResidentes() {
       const res = await axios.post('http://localhost:8000/api/catastro/residentes/carga-masiva/', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
-      alert(res.data.detail);
+      setReportData({
+        creados: res.data.creados,
+        invitaciones: res.data.invitaciones,
+        errores: res.data.errores || []
+      });
       fetchData(); // Reload data
     } catch (err) {
       console.error(err);
-      alert(err.response?.data?.detail || 'Error en la carga masiva.');
+      if (err.response?.data?.errores) {
+        setReportData({
+          creados: err.response.data.creados || 0,
+          invitaciones: err.response.data.invitaciones || 0,
+          errores: err.response.data.errores
+        });
+      } else {
+        alert(err.response?.data?.detail || 'Error en la carga masiva.');
+      }
     } finally {
       setLoading(false);
       e.target.value = null; // reset file input
@@ -124,6 +157,80 @@ export default function AdminResidentes() {
     if (!dob) return null;
     const diff = Date.now() - new Date(dob).getTime();
     return Math.abs(new Date(diff).getUTCFullYear() - 1970);
+  };
+
+  const handleExportExcel = () => {
+    const dataToExport = filteredResidentes.map(r => {
+      const u = unidades.find(un => un.id === r.unidad);
+      return {
+        'Unidad': getUnitString(u),
+        'Nombre Completo': `${r.nombre} ${r.apellidos || ''}`,
+        'RUT/DNI': r.rut_dni || 'N/A',
+        'Correo': r.correo || 'N/A',
+        'Teléfono': r.telefono || 'N/A',
+        'Edad': calculateAge(r.fecha_nacimiento) || 'N/A',
+        'Relación': RELACION_MAP[r.relacion_jefe_hogar] || r.relacion_jefe_hogar || 'N/A',
+        'Movilidad Reducida': r.movilidad_reducida ? 'Sí' : 'No',
+        'Problemas Médicos': r.condicion_medica ? 'Sí' : 'No'
+      };
+    });
+
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Residentes");
+    XLSX.writeFile(workbook, "Catastro_Residentes.xlsx");
+  };
+
+  const handleExportPDF = () => {
+    setIsExportingPDF(true);
+    
+    // Use setTimeout to allow UI to update with loading state before heavy processing
+    setTimeout(() => {
+      try {
+        const doc = new jsPDF('landscape');
+        
+        doc.setFontSize(16);
+        doc.text('Catastro de Residentes', 14, 20);
+        doc.setFontSize(10);
+        doc.text(`Generado el: ${new Date().toLocaleDateString('es-CL')}`, 14, 28);
+
+        const tableColumn = ["Unidad", "Nombre", "RUT/DNI", "Correo", "Teléfono", "Relación", "Salud"];
+        const tableRows = [];
+
+        filteredResidentes.forEach(r => {
+          const u = unidades.find(un => un.id === r.unidad);
+          const salud = [];
+          if (r.movilidad_reducida) salud.push('Movilidad Reducida');
+          if (r.condicion_medica) salud.push('Cond. Médica');
+          
+          const residentData = [
+            getUnitString(u),
+            `${r.nombre} ${r.apellidos || ''}`,
+            r.rut_dni || 'N/A',
+            r.correo || 'N/A',
+            r.telefono || 'N/A',
+            RELACION_MAP[r.relacion_jefe_hogar] || r.relacion_jefe_hogar || 'N/A',
+            salud.length > 0 ? salud.join(', ') : 'OK'
+          ];
+          tableRows.push(residentData);
+        });
+
+        autoTable(doc, {
+          head: [tableColumn],
+          body: tableRows,
+          startY: 35,
+          styles: { fontSize: 8 },
+          headStyles: { fillColor: [26, 127, 242] }
+        });
+
+        doc.save("Catastro_Residentes.pdf");
+      } catch (err) {
+        console.error("Error al exportar PDF:", err);
+        alert("Ocurrió un error al generar el PDF.");
+      } finally {
+        setIsExportingPDF(false);
+      }
+    }, 100);
   };
 
   const isFichaCompleta = (r) => {
@@ -209,7 +316,7 @@ export default function AdminResidentes() {
         )}
 
         {/* Tabs */}
-        <div className="flex border-b border-slate-200 mb-8">
+        <div className="tour-step-tabs flex border-b border-slate-200 mb-8">
           <button 
             className={`pb-4 px-2 mr-8 text-sm font-medium transition-colors border-b-2 ${activeTab === 'residentes' ? 'border-slate-900 text-slate-900' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
             onClick={() => setActiveTab('residentes')}
@@ -232,7 +339,7 @@ export default function AdminResidentes() {
 
         {/* Search & Actions */}
         <div className="flex flex-col gap-4 mb-6">
-          <div className="flex flex-col md:flex-row gap-4 w-full">
+          <div className="tour-step-filters flex flex-col md:flex-row gap-4 w-full">
             <div className="relative flex-1">
               <Search className="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
               <input 
@@ -260,6 +367,52 @@ export default function AdminResidentes() {
               </select>
             </div>
           </div>
+          
+          {activeTab === 'residentes' && (
+            <div className="flex flex-wrap items-center justify-between gap-4 mt-2">
+              <div className="tour-step-exports flex gap-2">
+                <button 
+                  onClick={handleExportExcel}
+                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-medium transition-colors shadow-sm flex items-center gap-2"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="8" y1="13" x2="16" y2="13"></line><line x1="8" y1="17" x2="16" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                  Exportar a Excel
+                </button>
+                <button 
+                  onClick={handleExportPDF}
+                  disabled={isExportingPDF}
+                  className={`px-4 py-2 text-white rounded-lg text-xs font-medium transition-colors shadow-sm flex items-center gap-2 ${isExportingPDF ? 'bg-slate-400 cursor-not-allowed' : 'bg-rose-600 hover:bg-rose-700'}`}
+                >
+                  {isExportingPDF ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                      Generando PDF...
+                    </>
+                  ) : (
+                    <>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><path d="M10 12v6"></path><path d="M14 12v6"></path><path d="M8 12h8"></path></svg>
+                      Exportar a PDF
+                    </>
+                  )}
+                </button>
+              </div>
+              <div className="tour-step-massive flex gap-2">
+                <a 
+                  href="/plantilla_residentes.xlsx"
+                  download="plantilla_residentes.xlsx"
+                  className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-lg text-xs font-medium transition-colors"
+                >
+                  Descargar Plantilla
+                </a>
+                <button 
+                  onClick={() => document.getElementById('excel-upload').click()}
+                  className="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-lg text-xs font-medium transition-colors"
+                >
+                  Carga Masiva (Excel)
+                </button>
+              </div>
+            </div>
+          )}
           
           {activeTab === 'cuentas' && (
             <div className="flex flex-wrap items-center justify-between gap-4 mt-2">
@@ -396,7 +549,7 @@ export default function AdminResidentes() {
                               </span>
                               {' | '}
                               <span 
-                                onClick={() => handleDeleteResidente(row.id, row.nombre)}
+                                onClick={() => handleDeleteCuenta(row.id, row.nombre)}
                                 className="cursor-pointer hover:underline text-red-500"
                               >
                                 Eliminar Cuenta
@@ -480,6 +633,70 @@ export default function AdminResidentes() {
           </div>
         )}
 
+        {/* Modal de Reporte de Carga Masiva */}
+        {reportData && (
+          <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl w-full max-w-lg shadow-xl overflow-hidden flex flex-col max-h-[90vh]">
+              <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+                <h3 className="font-bold text-lg text-slate-800">Reporte de Carga Masiva</h3>
+                <button 
+                  onClick={() => setReportData(null)}
+                  className="p-2 hover:bg-slate-100 rounded-lg transition-colors text-slate-500"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+              </div>
+              <div className="p-6 overflow-y-auto">
+                <div className="flex gap-4 mb-6">
+                  <div className="flex-1 bg-emerald-50 border border-emerald-100 p-4 rounded-xl text-center">
+                    <div className="text-2xl font-bold text-emerald-600">{reportData.creados}</div>
+                    <div className="text-xs text-emerald-700 font-medium uppercase tracking-wider mt-1">Creados</div>
+                  </div>
+                  <div className="flex-1 bg-blue-50 border border-blue-100 p-4 rounded-xl text-center">
+                    <div className="text-2xl font-bold text-blue-600">{reportData.invitaciones}</div>
+                    <div className="text-xs text-blue-700 font-medium uppercase tracking-wider mt-1">Invitaciones</div>
+                  </div>
+                  <div className="flex-1 bg-rose-50 border border-rose-100 p-4 rounded-xl text-center">
+                    <div className="text-2xl font-bold text-rose-600">{reportData.errores.length}</div>
+                    <div className="text-xs text-rose-700 font-medium uppercase tracking-wider mt-1">Errores</div>
+                  </div>
+                </div>
+
+                {reportData.errores.length > 0 && (
+                  <div>
+                    <h4 className="font-medium text-slate-800 mb-3 flex items-center gap-2">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-rose-500"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                      Detalle de Errores ({reportData.errores.length})
+                    </h4>
+                    <div className="bg-slate-50 border border-slate-200 rounded-lg p-3 max-h-64 overflow-y-auto">
+                      <ul className="space-y-2">
+                        {reportData.errores.map((err, idx) => (
+                          <li key={idx} className="text-sm text-slate-600 flex items-start gap-2">
+                            <span className="text-rose-500 font-bold mt-0.5">•</span>
+                            {err}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                )}
+                {reportData.errores.length === 0 && (
+                  <div className="text-center text-slate-500 py-4">
+                    ¡Todos los registros fueron procesados exitosamente sin errores!
+                  </div>
+                )}
+              </div>
+              <div className="px-6 py-4 border-t border-slate-100 bg-slate-50 flex justify-end">
+                <button 
+                  onClick={() => setReportData(null)}
+                  className="px-6 py-2.5 bg-[#1A7FF2] hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-colors shadow-sm"
+                >
+                  Cerrar
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );

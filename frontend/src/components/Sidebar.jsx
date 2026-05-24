@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Home, FileText, HelpCircle, Users, Bell, Settings, Building, LogOut } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import PageTour from './PageTour';
 
 export default function Sidebar({ role, unitInfo }) {
   const location = useLocation();
   const navigate = useNavigate();
+  const [runTour, setRunTour] = useState(false);
 
   const residenteLinks = [
     { name: 'Inicio', icon: Home, path: '/dashboard/residente' },
@@ -65,8 +67,16 @@ export default function Sidebar({ role, unitInfo }) {
       </nav>
 
       {/* Logout */}
-      <div className="p-4 border-t border-slate-100">
-        <button
+      {/* Bottom Actions */}
+      <div className="p-4 border-t border-slate-100 flex flex-col gap-2">
+        <button 
+          onClick={() => setRunTour(true)}
+          className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-600 rounded-xl hover:bg-slate-50 transition-colors w-full"
+        >
+          <HelpCircle className="w-5 h-5 text-slate-400" />
+          Tour Interactivo
+        </button>
+        <button 
           onClick={() => {
             if (window.confirm("¿Está seguro de que desea cerrar sesión?")) {
               localStorage.removeItem('accessToken');
@@ -75,12 +85,13 @@ export default function Sidebar({ role, unitInfo }) {
               navigate('/');
             }
           }}
-          className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
+          className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-600 rounded-xl hover:bg-slate-50 transition-colors w-full"
         >
-          <LogOut className="w-5 h-5" />
+          <LogOut className="w-5 h-5 text-slate-400" />
           Cerrar Sesión
         </button>
       </div>
+      <PageTour runTour={runTour} setRunTour={setRunTour} />
     </aside>
   );
 }

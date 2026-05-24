@@ -59,7 +59,7 @@ export default function DashboardAdmin() {
     const byDepto = {};
     residentes.forEach(r => {
       const unit = unidades.find(u => u.id === r.unidad);
-      const label = `Apto ${unit?.numero_depto || r.unidad}`;
+      const label = (unit?.torre && unit.torre !== 'null') ? `Torre ${unit.torre} - Depto ${unit.numero_depto}` : `Depto ${unit?.numero_depto || r.unidad}`;
       byDepto[label] = (byDepto[label] || 0) + 1;
     });
 
@@ -154,14 +154,19 @@ export default function DashboardAdmin() {
             })}
           </div>
 
-          <div className="border border-slate-200 rounded-xl p-6 mb-6">
+          <div className="tour-step-chart border border-slate-200 rounded-xl p-6 mb-6">
             <h3 className="text-sm font-medium text-slate-700 mb-6">Residentes Registrados (Vista: {activeFilter})</h3>
             <div className="flex items-end justify-between h-32 gap-2 md:gap-8 px-4 transition-all duration-300 mt-8">
               {getChartData().map(bar => (
-                <div key={bar.label} className="flex flex-col items-center justify-end flex-1 h-full">
-                  <span className="text-xs font-bold text-[#1A7FF2] mb-1">{bar.count}</span>
-                  <div className="w-full max-w-[40px] bg-[#1A7FF2]/80 rounded-t-sm transition-all duration-500 ease-out" style={{ height: bar.height }}></div>
-                  <span className="text-[10px] md:text-xs text-slate-500 mt-2 font-medium text-center">{bar.label}</span>
+                <div 
+                  key={bar.label} 
+                  onClick={() => bar.label !== 'Sin datos' && navigate('/dashboard/admin/residentes', { state: { activeTab: 'residentes', searchQuery: bar.label } })}
+                  className={`flex flex-col items-center justify-end flex-1 h-full ${bar.label !== 'Sin datos' ? 'cursor-pointer group' : ''}`}
+                  title={bar.label !== 'Sin datos' ? `Ver residentes de ${bar.label}` : ''}
+                >
+                  <span className={`text-xs font-bold text-[#1A7FF2] mb-1 ${bar.label !== 'Sin datos' ? 'group-hover:text-blue-700' : ''}`}>{bar.count}</span>
+                  <div className={`w-full max-w-[40px] bg-[#1A7FF2]/80 rounded-t-sm transition-all duration-500 ease-out ${bar.label !== 'Sin datos' ? 'group-hover:bg-[#1A7FF2]' : ''}`} style={{ height: bar.height }}></div>
+                  <span className="text-[10px] md:text-xs text-slate-500 mt-2 font-medium text-center truncate w-full max-w-[80px]" title={bar.label}>{bar.label}</span>
                 </div>
               ))}
             </div>
@@ -182,7 +187,7 @@ export default function DashboardAdmin() {
           </div>
 
           {/* Card: Documentos y Sin Residentes */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="tour-step-stats grid grid-cols-1 md:grid-cols-2 gap-6">
             <div 
               onClick={() => navigate('/dashboard/admin/documentos')}
               className="border border-slate-200 rounded-xl p-6 cursor-pointer hover:border-[#1A7FF2] hover:shadow-md transition-all group"

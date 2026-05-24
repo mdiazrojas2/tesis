@@ -7,6 +7,7 @@ export default function FormularioIntegrante() {
   const navigate = useNavigate();
   const location = useLocation();
   const [unidades, setUnidades] = useState([]);
+  const userRole = localStorage.getItem('userRole');
   
   const initialData = location.state?.integrante || {
     unidad: '',
@@ -56,8 +57,8 @@ export default function FormularioIntegrante() {
         await axios.post('http://localhost:8000/api/catastro/residentes/', formData);
         alert('Integrante creado exitosamente.');
       }
-      const role = localStorage.getItem('userRole');
-      if (role === 'admin') {
+      
+      if (userRole === 'admin') {
         navigate('/dashboard/admin/residentes');
       } else {
         navigate('/dashboard/residente/hogar');
@@ -70,7 +71,7 @@ export default function FormularioIntegrante() {
 
   return (
     <div className="flex min-h-screen bg-white font-sans text-slate-900">
-      <Sidebar role="residente" />
+      <Sidebar role={userRole === 'admin' ? 'admin' : 'residente'} />
       
       <main className="flex-1 p-8 md:p-12 lg:px-16 overflow-y-auto">
         <h1 className="text-3xl font-bold text-slate-900 mb-8">Crear/Editar Integrante</h1>
@@ -193,8 +194,7 @@ export default function FormularioIntegrante() {
             <button 
               type="button"
               onClick={() => {
-                const role = localStorage.getItem('userRole');
-                if (role === 'admin') {
+                if (userRole === 'admin') {
                   navigate('/dashboard/admin/residentes');
                 } else {
                   navigate('/dashboard/residente/hogar');
