@@ -8,7 +8,7 @@ const RELACION_MAP = {
   'ARRENDATARIO': 'Arrendatario',
   'FAMILIAR_MENOR': 'Familiar menor de edad',
   'FAMILIAR_ADULTO': 'Familiar adulto',
-  'FAMILIAR_MAYOR': 'Familiar adulto mayor',
+  'FAMILIAR_ADULTO_MAYOR': 'Familiar adulto mayor',
   'OTRO': 'Otro'
 };
 
@@ -50,7 +50,7 @@ export default function DetallesIntegrante() {
 
         <h1 className="text-3xl font-bold text-slate-900 mb-10">Detalles del Integrante del Hogar</h1>
         
-        <div className="max-w-4xl space-y-10 pb-12">
+        <div className="tour-step-info max-w-4xl space-y-10 pb-12">
           
           {/* Sección 1 */}
           <section>
@@ -140,7 +140,7 @@ export default function DetallesIntegrante() {
             </div>
           </section>
 
-          <div className="pt-8">
+          <div className="tour-step-save pt-8">
             <button 
               onClick={() => navigate('/dashboard/residente/hogar')}
               className="px-6 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium rounded-lg transition-colors text-sm"

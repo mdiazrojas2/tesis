@@ -108,7 +108,7 @@ export default function AdminSubirDocumento() {
         
         <div className="max-w-2xl space-y-6 pb-12">
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          <div className="tour-step-form grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">Condominio *</label>
               <select name="condominio" value={formData.condominio} onChange={handleChange} className="w-full border border-slate-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 bg-slate-50">
@@ -150,7 +150,7 @@ export default function AdminSubirDocumento() {
 
           {/* Drag & Drop Area */}
           <div 
-            className="border-2 border-dashed border-slate-200 rounded-xl p-12 flex flex-col items-center justify-center text-center mt-8"
+            className="tour-step-drag border-2 border-dashed border-slate-200 rounded-xl p-12 flex flex-col items-center justify-center text-center mt-8"
             onDragOver={handleDragOver}
             onDrop={handleDrop}
           >
@@ -196,7 +196,7 @@ export default function AdminSubirDocumento() {
             </div>
           )}
 
-          <div className="flex justify-end gap-4 pt-6 border-t border-slate-100 mt-12">
+          <div className="tour-step-save flex justify-end gap-4 pt-6 border-t border-slate-100 mt-12">
             <button 
               type="button"
               onClick={() => navigate('/dashboard/admin/documentos')}

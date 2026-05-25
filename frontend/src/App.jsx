@@ -28,6 +28,8 @@ import AdminCrearCuenta from './pages/admin/AdminCrearCuenta';
 import AdminEditarCuenta from './pages/admin/AdminEditarCuenta';
 import AdminNotificaciones from './pages/admin/AdminNotificaciones';
 
+import ProtectedRoute from './components/ProtectedRoute';
+
 function App() {
   return (
     <Routes>
@@ -36,25 +38,26 @@ function App() {
       <Route path="/login/admin" element={<LoginAdmin />} />
 
       {/* Residente Routes */}
-      <Route path="/dashboard/residente" element={<DashboardResidente />} />
-      <Route path="/dashboard/residente/hogar" element={<MiHogar />} />
-      <Route path="/dashboard/residente/hogar/nuevo" element={<FormularioIntegrante />} />
-      <Route path="/dashboard/residente/hogar/editar" element={<FormularioIntegrante />} />
-      <Route path="/dashboard/residente/hogar/detalles" element={<DetallesIntegrante />} />
-      <Route path="/dashboard/residente/documentos" element={<MisDocumentos />} />
-      <Route path="/dashboard/residente/soporte" element={<Soporte />} />
-      <Route path="/dashboard/residente/configuracion" element={<ResidenteConfiguracion />} />
+      <Route path="/dashboard/residente" element={<ProtectedRoute allowedRoles={['residente']}><DashboardResidente /></ProtectedRoute>} />
+      <Route path="/dashboard/residente/hogar" element={<ProtectedRoute allowedRoles={['residente']}><MiHogar /></ProtectedRoute>} />
+      <Route path="/dashboard/residente/hogar/nuevo" element={<ProtectedRoute allowedRoles={['residente']}><FormularioIntegrante /></ProtectedRoute>} />
+      <Route path="/dashboard/residente/hogar/editar" element={<ProtectedRoute allowedRoles={['residente']}><FormularioIntegrante /></ProtectedRoute>} />
+      <Route path="/dashboard/residente/hogar/detalles" element={<ProtectedRoute allowedRoles={['residente']}><DetallesIntegrante /></ProtectedRoute>} />
+      <Route path="/dashboard/residente/documentos" element={<ProtectedRoute allowedRoles={['residente']}><MisDocumentos /></ProtectedRoute>} />
+      <Route path="/dashboard/residente/soporte" element={<ProtectedRoute allowedRoles={['residente']}><Soporte /></ProtectedRoute>} />
+      <Route path="/dashboard/residente/configuracion" element={<ProtectedRoute allowedRoles={['residente']}><ResidenteConfiguracion /></ProtectedRoute>} />
 
       {/* Admin Routes */}
-      <Route path="/dashboard/admin" element={<DashboardAdmin />} />
-      <Route path="/dashboard/admin/residentes" element={<AdminResidentes />} />
-      <Route path="/dashboard/admin/documentos" element={<AdminDocumentos />} />
-      <Route path="/dashboard/admin/documentos/nuevo" element={<AdminSubirDocumento />} />
-      <Route path="/dashboard/admin/configuracion" element={<AdminConfiguracion />} />
-      <Route path="/dashboard/admin/cuentas/enviar-invitacion" element={<AdminEnviarInvitacion />} />
-      <Route path="/dashboard/admin/cuentas/nueva" element={<AdminCrearCuenta />} />
-      <Route path="/dashboard/admin/cuentas/editar" element={<AdminEditarCuenta />} />
-      <Route path="/dashboard/admin/notificaciones" element={<AdminNotificaciones />} />
+      <Route path="/dashboard/admin" element={<ProtectedRoute allowedRoles={['admin']}><DashboardAdmin /></ProtectedRoute>} />
+      <Route path="/dashboard/admin/residentes" element={<ProtectedRoute allowedRoles={['admin']}><AdminResidentes /></ProtectedRoute>} />
+      <Route path="/dashboard/admin/documentos" element={<ProtectedRoute allowedRoles={['admin']}><AdminDocumentos /></ProtectedRoute>} />
+      <Route path="/dashboard/admin/documentos/nuevo" element={<ProtectedRoute allowedRoles={['admin']}><AdminSubirDocumento /></ProtectedRoute>} />
+      <Route path="/dashboard/admin/configuracion" element={<ProtectedRoute allowedRoles={['admin']}><AdminConfiguracion /></ProtectedRoute>} />
+      <Route path="/dashboard/admin/cuentas/enviar-invitacion" element={<ProtectedRoute allowedRoles={['admin']}><AdminEnviarInvitacion /></ProtectedRoute>} />
+      <Route path="/dashboard/admin/cuentas/nueva" element={<ProtectedRoute allowedRoles={['admin']}><AdminCrearCuenta /></ProtectedRoute>} />
+      <Route path="/dashboard/admin/cuentas/editar" element={<ProtectedRoute allowedRoles={['admin']}><AdminEditarCuenta /></ProtectedRoute>} />
+      <Route path="/dashboard/admin/notificaciones" element={<ProtectedRoute allowedRoles={['admin']}><AdminNotificaciones /></ProtectedRoute>} />
+      
       <Route path="/establecer-clave/:uid/:token" element={<EstablecerClave />} />
       <Route path="/recuperar-clave" element={<RecuperarClave />} />
     </Routes>

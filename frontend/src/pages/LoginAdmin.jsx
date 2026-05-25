@@ -20,9 +20,23 @@ export default function LoginAdmin() {
         username,
         password
       });
-      localStorage.setItem('accessToken', response.data.access);
-      localStorage.setItem('refreshToken', response.data.refresh);
-      localStorage.setItem('userRole', 'admin');
+      
+      const { access, refresh } = response.data;
+      
+      // Decodificar token manualmente para obtener el rol (sin librerías extras aquí)
+      const payload = JSON.parse(atob(access.split('.')[1]));
+      const realRole = payload.rol?.toLowerCase();
+      
+      if (realRole !== 'admin') {
+        setError('No tienes permisos de administrador.');
+        setLoading(false);
+        return;
+      }
+
+      localStorage.setItem('accessToken', access);
+      localStorage.setItem('refreshToken', refresh);
+      localStorage.setItem('userRole', realRole);
+      
       navigate('/dashboard/admin');
     } catch (err) {
       setError('Credenciales incorrectas o acceso denegado.');

@@ -12,7 +12,11 @@ from .utils import valida_rut_chileno, valida_nombre, send_email_async
 from django.contrib.auth import get_user_model
 from django.urls import reverse
 from .models import Condominio, Unidad, Residente, Documento, Notificacion
-from .serializers import CondominioSerializer, UnidadSerializer, ResidenteSerializer, DocumentoSerializer, NotificacionSerializer
+from .serializers import CondominioSerializer, UnidadSerializer, ResidenteSerializer, DocumentoSerializer, NotificacionSerializer, CustomTokenObtainPairSerializer
+from rest_framework_simplejwt.views import TokenObtainPairView
+
+class CustomTokenObtainPairView(TokenObtainPairView):
+    serializer_class = CustomTokenObtainPairSerializer
 
 class RoleBasedAccess(permissions.BasePermission):
     """
@@ -61,7 +65,7 @@ class UnidadViewSet(viewsets.ModelViewSet):
         errores = []
         
         for row_idx, row in enumerate(ws.iter_rows(min_row=2, values_only=True), start=2):
-            data = dict(zip(headers, [str(v).strip() if v else '' for v in row]))
+            data = dict(zip(headers, [str(int(v)) if isinstance(v, float) and v.is_integer() else str(v).strip() if v is not None else '' for v in row]))
             
             if not data.get('numero_depto'):
                 errores.append(f'Fila {row_idx}: numero_depto es obligatorio')
@@ -232,12 +236,12 @@ class ResidenteViewSet(viewsets.ModelViewSet):
             if all(v is None or str(v).strip() == '' for v in row):
                 continue
                 
-            data = dict(zip(headers, [str(v).strip() if v is not None else '' for v in row]))
+            data = dict(zip(headers, [str(int(v)) if isinstance(v, float) and v.is_integer() else str(v).strip() if v is not None else '' for v in row]))
             
             nombres = data.get('nombres', '')
             numero_depto = data.get('numero_depto', '')
             
-            if no_nombres or not numero_depto:
+            if not nombres or not numero_depto:
                 errores.append(f'Fila {row_idx}: nombres y numero_depto son obligatorios.')
                 continue
                 
@@ -255,7 +259,7 @@ class ResidenteViewSet(viewsets.ModelViewSet):
                 errores.append(f'Fila {row_idx}: RUT {rut_dni} no es válido.')
                 continue
                 
-            relacion = data.get('relacion_hogar', 'JEFE_HOGAR').upper()
+            relacion = data.get('relacion_jefe_hogar', 'JEFE_HOGAR').upper()
             if relacion and relacion not in VALID_RELACIONES:
                 errores.append(f"Fila {row_idx}: Relación '{relacion}' no es válida.")
                 continue
@@ -281,7 +285,8 @@ class ResidenteViewSet(viewsets.ModelViewSet):
                 if torre_str:
                     unidad = Unidad.objects.filter(condominio=condominio, torre=torre_str, numero_depto=numero_depto).first()
                 else:
-                    unidad = Unidad.objects.filter(condominio=condominio, numero_depto=numero_depto, torre__in=[None, '']).first()
+                    from django.db.models import Q
+                    unidad = Unidad.objects.filter(Q(torre__isnull=True) | Q(torre=''), condominio=condominio, numero_depto=numero_depto).first()
                 
                 if not unidad:
                     errores.append(f"Fila {row_idx}: La unidad Depto {numero_depto} (Torre {torre_str or 'N/A'}) no existe. Debe crear la unidad primero.")

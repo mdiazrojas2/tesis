@@ -51,7 +51,7 @@ export default function ResidenteConfiguracion() {
         <h1 className="text-3xl font-bold text-slate-900 mb-8">Configuración de Cuenta</h1>
 
         <div className="max-w-xl">
-          <form onSubmit={handleSave} className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+          <form onSubmit={handleSave} className="tour-step-form bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
             <div className="p-6 border-b border-slate-100 bg-slate-50/50 flex items-center gap-3">
               <ShieldCheck className="w-6 h-6 text-slate-700" />
               <div>
@@ -101,7 +101,7 @@ export default function ResidenteConfiguracion() {
               </div>
             </div>
 
-            <div className="p-6 border-t border-slate-100 bg-slate-50/50 flex justify-end">
+            <div className="tour-step-save p-6 border-t border-slate-100 bg-slate-50/50 flex justify-end">
               <button 
                 type="submit"
                 disabled={isSaving}

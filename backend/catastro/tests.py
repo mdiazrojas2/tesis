@@ -14,8 +14,8 @@ def test_valida_nombre_incorrecto():
     assert valida_nombre("Marcela@!") == False
 
 def test_valida_rut_correcto():
-    # Usamos un RUT ficticio válido matemáticamente
-    assert valida_rut_chileno("11111111-1") == False # 11111111-1 es inválido
+    # Usamos un RUT ficticio inválido matemáticamente
+    assert valida_rut_chileno("11111111-2") == False # 11111111-2 es inválido
     # RUTs ficticios pero correctos según algoritmo:
     assert valida_rut_chileno("12345678-5") == True
     
@@ -26,16 +26,16 @@ def test_valida_rut_incorrecto():
 @pytest.mark.django_db
 def test_creacion_residente_genera_notificacion():
     # Preparar base de datos
-    condominio = Condominio.objects.create(nombre="Condominio Test", rut="11111111-1")
+    condominio = Condominio.objects.create(nombre="Condominio Test", direccion="Calle 123")
     unidad = Unidad.objects.create(condominio=condominio, numero_depto="101")
     
     # Crear residente (Esto debería gatillar la Señal post_save)
     residente = Residente.objects.create(
         unidad=unidad,
-        rut="12345678-5",
+        rut_dni="12345678-5",
         nombre="Juan",
         apellidos="Pérez",
-        relacion="JEFE_HOGAR"
+        relacion_jefe_hogar="JEFE_HOGAR"
     )
     
     # Verificar que el residente se guardó

@@ -3,12 +3,14 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import Sidebar from '../../components/Sidebar';
 import axios from 'axios';
 import { validateRUT, formatRUT, validateName } from '../../utils/rutValidation';
+import useResidentUnit from '../../hooks/useResidentUnit';
 
 export default function FormularioIntegrante() {
   const navigate = useNavigate();
   const location = useLocation();
   const [unidades, setUnidades] = useState([]);
   const userRole = localStorage.getItem('userRole');
+  const { unitId } = useResidentUnit();
   
   const initialData = location.state?.integrante || {
     unidad: '',
@@ -40,6 +42,12 @@ export default function FormularioIntegrante() {
       .then(res => setUnidades(res.data))
       .catch(err => console.error("Error cargando unidades:", err));
   }, []);
+
+  useEffect(() => {
+    if (userRole !== 'admin' && unitId && !formData.unidad) {
+      setFormData(prev => ({ ...prev, unidad: unitId }));
+    }
+  }, [unitId, userRole, formData.unidad]);
 
   const handleChange = (e) => {
     let { name, value, type, checked } = e.target;
@@ -89,7 +97,13 @@ export default function FormularioIntegrante() {
       }
     } catch (error) {
       console.error("Error al guardar:", error.response?.data || error);
-      alert('Error al guardar. Por favor, revise los datos.');
+      if (error.response?.data && typeof error.response.data === 'object') {
+        // Extraer todos los mensajes de error del backend (ej: rut duplicado o edad incorrecta)
+        const errorMessages = Object.values(error.response.data).flat().join('\n');
+        alert(`No se pudo guardar:\n${errorMessages}`);
+      } else {
+        alert('Error al guardar. Por favor, revise los datos.');
+      }
     }
   };
 
@@ -100,19 +114,21 @@ export default function FormularioIntegrante() {
       <main className="flex-1 p-8 md:p-12 lg:px-16 overflow-y-auto">
         <h1 className="text-3xl font-bold text-slate-900 mb-8">Crear/Editar Integrante</h1>
         
-        <form onSubmit={handleSave} className="max-w-2xl space-y-8 pb-12">
+        <form onSubmit={handleSave} className="tour-step-form max-w-2xl space-y-8 pb-12">
           
           {/* Sección 1 */}
           <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Unidad/Departamento</label>
-              <select name="unidad" value={formData.unidad} onChange={handleChange} required className="w-full border border-slate-200 bg-slate-50 rounded-lg px-4 py-2.5 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/50">
-                <option value="">Seleccione una unidad</option>
-                {unidades.map(u => (
-                  <option key={u.id} value={u.id}>{(u.torre && u.torre !== 'null') ? `Torre: ${u.torre} - Depto: ${u.numero_depto}` : `Depto: ${u.numero_depto}`}</option>
-                ))}
-              </select>
-            </div>
+            {userRole === 'admin' && (
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Unidad/Departamento</label>
+                <select name="unidad" value={formData.unidad} onChange={handleChange} required className="w-full border border-slate-200 bg-slate-50 rounded-lg px-4 py-2.5 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/50">
+                  <option value="">Seleccione una unidad</option>
+                  {unidades.map(u => (
+                    <option key={u.id} value={u.id}>{(u.torre && u.torre !== 'null') ? `Torre: ${u.torre} - Depto: ${u.numero_depto}` : `Depto: ${u.numero_depto}`}</option>
+                  ))}
+                </select>
+              </div>
+            )}
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Nombres</label>
               <input type="text" name="nombre" value={formData.nombre} onChange={handleChange} required placeholder="Ingrese el nombre" className={`w-full border ${errors.nombre ? 'border-red-500' : 'border-slate-200'} bg-slate-50 rounded-lg px-4 py-2.5 text-sm focus:bg-white focus:outline-none focus:ring-2 ${errors.nombre ? 'focus:ring-red-500/50' : 'focus:ring-blue-500/50'}`} />
@@ -217,7 +233,7 @@ export default function FormularioIntegrante() {
             </div>
           </div>
 
-          <div className="flex justify-end gap-4 pt-6 border-t border-slate-100">
+          <div className="tour-step-save flex justify-end gap-4 pt-6 border-t border-slate-100">
             <button 
               type="button"
               onClick={() => {

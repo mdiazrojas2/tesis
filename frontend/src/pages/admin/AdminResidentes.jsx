@@ -13,7 +13,7 @@ const RELACION_MAP = {
   'ARRENDATARIO': 'Arrendatario',
   'FAMILIAR_MENOR': 'Familiar menor de edad',
   'FAMILIAR_ADULTO': 'Familiar adulto',
-  'FAMILIAR_MAYOR': 'Familiar adulto mayor',
+  'FAMILIAR_ADULTO_MAYOR': 'Familiar adulto mayor',
   'OTRO': 'Otro'
 };
 
@@ -271,7 +271,7 @@ export default function AdminResidentes() {
     } else if (filterType === 'medico') {
       matchFilter = r.condicion_medica === true;
     } else if (filterType === 'mayor') {
-      matchFilter = r.relacion_jefe_hogar === 'FAMILIAR_MAYOR' || (age !== null && age >= 60);
+      matchFilter = r.relacion_jefe_hogar === 'FAMILIAR_ADULTO_MAYOR' || (age !== null && age >= 60);
     } else if (filterType === 'menor') {
       matchFilter = r.relacion_jefe_hogar === 'FAMILIAR_MENOR' || (age !== null && age < 18);
     } else if (filterType === 'incompleto') {
@@ -418,21 +418,7 @@ export default function AdminResidentes() {
                   )}
                 </button>
               </div>
-              <div className="tour-step-massive flex gap-2">
-                <a 
-                  href="/plantilla_residentes.xlsx"
-                  download="plantilla_residentes.xlsx"
-                  className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-lg text-xs font-medium transition-colors"
-                >
-                  Descargar Plantilla
-                </a>
-                <button 
-                  onClick={() => document.getElementById('excel-upload').click()}
-                  className="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-lg text-xs font-medium transition-colors"
-                >
-                  Carga Masiva (Excel)
-                </button>
-              </div>
+
             </div>
           )}
           
@@ -461,15 +447,23 @@ export default function AdminResidentes() {
               <div className="flex gap-2">
                 <button 
                   onClick={() => navigate('/dashboard/admin/cuentas/nueva')}
-                  className="px-4 py-2 bg-[#1A7FF2] hover:bg-blue-600 text-white rounded-lg text-xs font-medium transition-colors shadow-sm"
+                  className="tour-step-add px-4 py-2 bg-[#1A7FF2] hover:bg-blue-600 text-white rounded-lg text-xs font-medium transition-colors shadow-sm"
                 >
                   Crear Nueva Cuenta de Usuario
                 </button>
+                <a 
+                  href="/plantilla_residentes.xlsx"
+                  download="plantilla_residentes.xlsx"
+                  className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-lg text-xs font-medium transition-colors flex items-center gap-2"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                  Descargar Plantilla Excel
+                </a>
                 <button 
                   onClick={() => {
                     document.getElementById('excel-upload').click();
                   }}
-                  className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-lg text-xs font-medium transition-colors"
+                  className="tour-step-massive px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-lg text-xs font-medium transition-colors"
                 >
                   Carga Masiva de Usuarios (Excel)
                 </button>
@@ -602,7 +596,7 @@ export default function AdminResidentes() {
                                 </span>
                               </div>
                             </td>
-                            <td className="p-4 text-blue-600 font-medium leading-relaxed max-w-[300px] text-xs">
+                            <td className="tour-step-table-actions p-4 text-blue-600 font-medium leading-relaxed max-w-[300px] text-xs">
                               {!row.tiene_cuenta ? (
                                 <span 
                                   onClick={() => navigate('/dashboard/admin/cuentas/enviar-invitacion', { state: { residente: row } })} 
@@ -766,7 +760,27 @@ export default function AdminResidentes() {
                   </div>
                 )}
               </div>
-              <div className="px-6 py-4 border-t border-slate-100 bg-slate-50 flex justify-end">
+              <div className="px-6 py-4 border-t border-slate-100 bg-slate-50 flex justify-end gap-3">
+                {reportData.errores.length > 0 && (
+                  <button 
+                    onClick={() => {
+                      const text = "REPORTE DE ERRORES - CARGA MASIVA\n" + "-".repeat(40) + "\n\n" + reportData.errores.join('\n');
+                      const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+                      const url = URL.createObjectURL(blob);
+                      const a = document.createElement('a');
+                      a.href = url;
+                      a.download = 'errores_carga_masiva.txt';
+                      document.body.appendChild(a);
+                      a.click();
+                      document.body.removeChild(a);
+                      URL.revokeObjectURL(url);
+                    }}
+                    className="px-4 py-2.5 bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 rounded-lg text-sm font-medium transition-colors shadow-sm flex items-center gap-2"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                    Descargar Errores (.txt)
+                  </button>
+                )}
                 <button 
                   onClick={() => setReportData(null)}
                   className="px-6 py-2.5 bg-[#1A7FF2] hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-colors shadow-sm"

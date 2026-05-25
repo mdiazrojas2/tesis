@@ -19,9 +19,22 @@ export default function LoginResidente() {
         username: email, // Usamos el correo como username
         password
       });
-      localStorage.setItem('accessToken', response.data.access);
-      localStorage.setItem('refreshToken', response.data.refresh);
-      localStorage.setItem('userRole', 'residente');
+
+      const { access, refresh } = response.data;
+      
+      const payload = JSON.parse(atob(access.split('.')[1]));
+      const realRole = payload.rol?.toLowerCase();
+      
+      if (realRole !== 'residente') {
+        setError('No tienes una cuenta de residente activa.');
+        setLoading(false);
+        return;
+      }
+
+      localStorage.setItem('accessToken', access);
+      localStorage.setItem('refreshToken', refresh);
+      localStorage.setItem('userRole', realRole);
+      
       navigate('/dashboard/residente');
     } catch (err) {
       setError('Correo o contraseña incorrectos.');

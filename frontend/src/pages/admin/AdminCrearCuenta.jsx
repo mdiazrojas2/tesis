@@ -86,7 +86,7 @@ export default function AdminCrearCuenta() {
           <h1 className="text-3xl font-bold text-slate-900 mb-2">Crear Nueva Cuenta de Usuario</h1>
           <p className="text-slate-500 mb-10 text-sm">Ingrese los detalles del nuevo propietario/jefe de hogar</p>
           
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="tour-step-form space-y-6 bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-slate-900 mb-2">Nombres *</label>
@@ -162,7 +162,7 @@ export default function AdminCrearCuenta() {
               </select>
             </div>
 
-            <div className="flex items-start gap-3 p-4 bg-slate-50 border border-slate-200 rounded-lg">
+            <div className="tour-step-create-account flex items-start gap-3 p-4 bg-slate-50 border border-slate-200 rounded-lg">
               <input 
                 type="checkbox" 
                 id="crear_cuenta"
@@ -180,7 +180,7 @@ export default function AdminCrearCuenta() {
               </div>
             </div>
 
-            <div className="flex justify-end gap-4 pt-4">
+            <div className="tour-step-save flex justify-end gap-4 pt-4">
               <button 
                 type="button"
                 onClick={() => navigate('/dashboard/admin/residentes')}

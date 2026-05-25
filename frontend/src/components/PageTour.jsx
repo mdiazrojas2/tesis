@@ -60,6 +60,48 @@ const TOUR_STEPS = {
   '/dashboard/residente/soporte': [
     { target: 'body', content: 'Centro de Ayuda y Soporte.', placement: 'center', disableBeacon: true },
     { target: '.tour-step-form', content: 'Aquí puedes revisar respuestas a Preguntas Frecuentes, ver el correo directo de la administración o enviarles un mensaje desde el formulario.' }
+  ],
+  '/dashboard/admin/cuentas/nueva': [
+    { target: 'body', content: 'Creación de Cuenta.', placement: 'center', disableBeacon: true },
+    { target: '.tour-step-form', content: 'Rellene todos los datos personales del residente y asegúrese de asignarle la unidad correcta.' },
+    { target: '.tour-step-create-account', content: 'Marque esta casilla si desea que el sistema envíe automáticamente un correo con las credenciales de acceso al residente.' },
+    { target: '.tour-step-save', content: 'Guarde para finalizar la creación.' }
+  ],
+  '/dashboard/admin/cuentas/editar': [
+    { target: 'body', content: 'Edición de Cuenta.', placement: 'center', disableBeacon: true },
+    { target: '.tour-step-form', content: 'Modifique los nombres, apellidos o correos según sea necesario. Si cambia el correo, el residente deberá iniciar sesión con el nuevo.' },
+    { target: '.tour-step-save', content: 'Guarde los cambios.' }
+  ],
+  '/dashboard/admin/cuentas/enviar-invitacion': [
+    { target: 'body', content: 'Reenviar Invitación.', placement: 'center', disableBeacon: true },
+    { target: '.tour-step-form', content: 'Esta acción generará un nuevo token seguro y lo enviará al correo del residente.' },
+    { target: '.tour-step-save', content: 'Confirme el envío.' }
+  ],
+  '/dashboard/admin/documentos/nuevo': [
+    { target: 'body', content: 'Subir Documento.', placement: 'center', disableBeacon: true },
+    { target: '.tour-step-form', content: 'Complete los detalles obligatorios del documento, como título y tipo.' },
+    { target: '.tour-step-drag', content: 'Arrastre el archivo (PDF, DOCX) o haga clic para buscarlo en su computador.' },
+    { target: '.tour-step-save', content: 'Inicie la carga del documento.' }
+  ],
+  '/dashboard/residente/hogar/nuevo': [
+    { target: 'body', content: 'Añadir Integrante.', placement: 'center', disableBeacon: true },
+    { target: '.tour-step-form', content: 'Complete los datos personales y, muy importante, declare si la persona tiene movilidad reducida o condiciones médicas vitales para emergencias.' },
+    { target: '.tour-step-save', content: 'Guarde la ficha.' }
+  ],
+  '/dashboard/residente/hogar/editar': [
+    { target: 'body', content: 'Editar Integrante.', placement: 'center', disableBeacon: true },
+    { target: '.tour-step-form', content: 'Mantenga siempre al día la información médica y los contactos de emergencia de su familiar.' },
+    { target: '.tour-step-save', content: 'Guarde los cambios realizados.' }
+  ],
+  '/dashboard/residente/hogar/detalles': [
+    { target: 'body', content: 'Detalle del Integrante.', placement: 'center', disableBeacon: true },
+    { target: '.tour-step-info', content: 'Revise la ficha técnica completa, incluyendo las observaciones médicas y números de emergencia declarados.' },
+    { target: '.tour-step-save', content: 'Regrese al listado de su hogar.' }
+  ],
+  '/dashboard/residente/configuracion': [
+    { target: 'body', content: 'Configuración.', placement: 'center', disableBeacon: true },
+    { target: '.tour-step-form', content: 'Por su seguridad, le recomendamos cambiar su contraseña regularmente usando una combinación fuerte.' },
+    { target: '.tour-step-save', content: 'Aplique el cambio de contraseña.' }
   ]
 };
 

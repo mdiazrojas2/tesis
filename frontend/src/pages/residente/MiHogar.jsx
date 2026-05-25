@@ -11,7 +11,7 @@ const RELACION_MAP = {
   'ARRENDATARIO': 'Arrendatario',
   'FAMILIAR_MENOR': 'Familiar menor de edad',
   'FAMILIAR_ADULTO': 'Familiar adulto',
-  'FAMILIAR_MAYOR': 'Familiar adulto mayor',
+  'FAMILIAR_ADULTO_MAYOR': 'Familiar adulto mayor',
   'OTRO': 'Otro'
 };
 

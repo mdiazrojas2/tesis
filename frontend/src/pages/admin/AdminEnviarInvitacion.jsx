@@ -41,11 +41,13 @@ export default function AdminEnviarInvitacion() {
           <h1 className="text-3xl font-bold text-slate-900 mb-2">Enviar Invitación</h1>
           <p className="text-slate-500 mb-8 text-sm">Confirme el envío de una invitación al usuario</p>
           
-          <p className="text-slate-800 font-medium mb-10 text-base">
-            ¿Está seguro de que desea enviar una nueva invitación de acceso a <strong>{nombre} ({email})</strong>?
-          </p>
+          <div className="tour-step-form bg-white p-6 rounded-xl border border-slate-200 shadow-sm mb-6">
+            <p className="text-slate-800 font-medium text-base">
+              ¿Está seguro de que desea enviar una nueva invitación de acceso a <strong>{nombre} ({email})</strong>?
+            </p>
+          </div>
 
-          <div className="flex justify-end gap-4">
+          <div className="tour-step-save flex justify-end gap-4">
             <button 
               onClick={() => navigate('/dashboard/admin/residentes')}
               className="px-6 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-900 font-bold rounded-lg transition-colors text-sm"
