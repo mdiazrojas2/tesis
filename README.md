@@ -120,7 +120,7 @@ Tesis/
 
 ### Paso 1: Clonación y Preparación 📋
 ```bash
-git clone <URL_DEL_REPOSITORIO>
+git clone https://github.com/mdiazrojas2/tesis.git
 cd tesis
 ```
 
