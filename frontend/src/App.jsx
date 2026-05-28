@@ -50,6 +50,8 @@ function App() {
       {/* Admin Routes */}
       <Route path="/dashboard/admin" element={<ProtectedRoute allowedRoles={['admin']}><DashboardAdmin /></ProtectedRoute>} />
       <Route path="/dashboard/admin/residentes" element={<ProtectedRoute allowedRoles={['admin']}><AdminResidentes /></ProtectedRoute>} />
+      <Route path="/dashboard/admin/residentes/detalles" element={<ProtectedRoute allowedRoles={['admin']}><DetallesIntegrante /></ProtectedRoute>} />
+      <Route path="/dashboard/admin/residentes/editar" element={<ProtectedRoute allowedRoles={['admin']}><FormularioIntegrante /></ProtectedRoute>} />
       <Route path="/dashboard/admin/documentos" element={<ProtectedRoute allowedRoles={['admin']}><AdminDocumentos /></ProtectedRoute>} />
       <Route path="/dashboard/admin/documentos/nuevo" element={<ProtectedRoute allowedRoles={['admin']}><AdminSubirDocumento /></ProtectedRoute>} />
       <Route path="/dashboard/admin/configuracion" element={<ProtectedRoute allowedRoles={['admin']}><AdminConfiguracion /></ProtectedRoute>} />

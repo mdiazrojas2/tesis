@@ -15,6 +15,7 @@ const RELACION_MAP = {
 export default function DetallesIntegrante() {
   const navigate = useNavigate();
   const location = useLocation();
+  const userRole = localStorage.getItem('userRole');
 
   const int = location.state?.integrante || {
     nombre: 'Lucía',
@@ -37,13 +38,15 @@ export default function DetallesIntegrante() {
 
   return (
     <div className="flex min-h-screen bg-white font-sans text-slate-900">
-      <Sidebar role="residente" />
+      <Sidebar role={userRole === 'admin' ? 'admin' : 'residente'} />
       
       <main className="flex-1 p-8 md:p-12 lg:px-16 overflow-y-auto">
         
         {/* Breadcrumb / Nav */}
         <div className="text-sm text-slate-500 mb-6">
-          <span className="cursor-pointer hover:text-blue-600" onClick={() => navigate('/dashboard/residente/hogar')}>Mi Hogar</span>
+          <span className="cursor-pointer hover:text-blue-600" onClick={() => userRole === 'admin' ? navigate('/dashboard/admin/residentes') : navigate('/dashboard/residente/hogar')}>
+            {userRole === 'admin' ? 'Residentes' : 'Mi Hogar'}
+          </span>
           <span className="mx-2">/</span>
           <span className="text-slate-900 font-medium">Ver Detalles</span>
         </div>
@@ -142,10 +145,10 @@ export default function DetallesIntegrante() {
 
           <div className="tour-step-save pt-8">
             <button 
-              onClick={() => navigate('/dashboard/residente/hogar')}
+              onClick={() => userRole === 'admin' ? navigate('/dashboard/admin/residentes') : navigate('/dashboard/residente/hogar')}
               className="px-6 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium rounded-lg transition-colors text-sm"
             >
-              Volver a Mi Hogar
+              {userRole === 'admin' ? 'Volver a Residentes' : 'Volver a Mi Hogar'}
             </button>
           </div>
 

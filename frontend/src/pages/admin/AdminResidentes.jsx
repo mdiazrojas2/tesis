@@ -552,14 +552,14 @@ export default function AdminResidentes() {
                             </td>
                             <td className="tour-step-table-actions p-4 text-blue-600 font-medium leading-relaxed max-w-[200px]">
                               <span 
-                                onClick={() => navigate('/dashboard/residente/hogar/detalles', { state: { integrante: row } })}
+                                onClick={() => navigate('/dashboard/admin/residentes/detalles', { state: { integrante: row } })}
                                 className="cursor-pointer hover:underline"
                               >
                                 Ver Detalles
                               </span>
                               {' | '}
                               <span 
-                                onClick={() => navigate('/dashboard/residente/hogar/editar', { state: { integrante: row } })}
+                                onClick={() => navigate('/dashboard/admin/residentes/editar', { state: { integrante: row } })}
                                 className="cursor-pointer hover:underline"
                               >
                                 Editar
